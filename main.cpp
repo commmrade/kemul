@@ -178,7 +178,7 @@ int main() {
             }
         }
 
-        int poll_status = poll(fds, master_fd + 1, 0);
+        int poll_status = poll(fds, 1, 0);
         if (poll_status < 0) {
             throw std::runtime_error("Some kinda poll error");
         }
@@ -187,8 +187,8 @@ int main() {
             char buf[256];
             ssize_t rd_size;
 
-            std::string output;
-            // output.reserve(256);
+            std::string output{};
+            output.reserve(256);
             while ((rd_size = read(master_fd, buf, sizeof(buf))) > 0) {
                 output.append(buf, rd_size);
             }
@@ -196,7 +196,7 @@ int main() {
             std::istringstream ss{std::move(output)};
             std::string line;
             while (std::getline(ss, line)) {
-                buffer.push_back(std::move(line));
+                buffer.push_back(line);
             }
             should_render = true;
         }
@@ -214,8 +214,8 @@ int main() {
 
         for (auto i = scroll_offset; i < buffer.size(); ++i) {
             std::vector<uint32_t> codepoints;
-            utf8::utf8to32(buffer[i].begin(), buffer[i].end(), std::back_inserter(codepoints));
-
+            utf8::utf8to32(buffer[i].cbegin(), buffer[i].cend(), std::back_inserter(codepoints));
+            
             for (auto codepoint : codepoints) {
                 if (cache_glyphs.find(codepoint) == cache_glyphs.end()) {
                     cache_glyph_to_atlas(glyph_atlas, codepoint, renderer, atlas_x, atlas_y, cache_glyphs, font, render_info.max_texture_width);
@@ -242,7 +242,8 @@ int main() {
         }
 
         std::vector<uint32_t> codepoints;
-        utf8::utf8to32(current_command.begin(), current_command.end(), std::back_inserter(codepoints));
+        
+        utf8::utf8to32(current_command.cbegin(), current_command.cend(), std::back_inserter(codepoints));
         for (auto codepoint : codepoints) {
 
             if (cache_glyphs.find(codepoint) == cache_glyphs.end()) {
@@ -266,6 +267,7 @@ int main() {
         should_render = false;
     }
 
+    SDL_DestroyTexture(glyph_atlas);
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
