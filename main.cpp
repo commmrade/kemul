@@ -8,7 +8,7 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
-#include <SDL_blendmode.h>
+// #include <SDL_blendmode.h>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -147,11 +147,11 @@ int main() {
                 case SDL_TEXTINPUT: {
                     write(master_fd, event.text.text, SDL_strlen(event.text.text));
                     current_command.append(event.text.text, SDL_strlen(event.text.text));
-
                     should_render = true;
                     break;
                 }
                 case SDL_KEYDOWN: {
+                    
                     if (event.key.keysym.sym == SDLK_RETURN) {
                         write(master_fd, "\n", 1);
                         buffer.back() += current_command;
@@ -163,12 +163,11 @@ int main() {
                         buffer.clear();
                         current_command = "";
                         should_render = true;
-                    }
+                    } 
                     break;
                 }
                 case SDL_MOUSEWHEEL: {
                     if (event.wheel.y < 0) {
-                        std::cout << "he\n";
                         scroll_offset += 2;
                     } else if (event.wheel.y > 0) {
                         if (scroll_offset > 0) {
