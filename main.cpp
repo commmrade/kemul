@@ -151,19 +151,17 @@ int main() {
                     break;
                 }
                 case SDL_KEYDOWN: {
-                    
                     if (event.key.keysym.sym == SDLK_RETURN) {
                         write(master_fd, "\n", 1);
                         buffer.back() += current_command;
                         current_command.clear();
-                        // current_command = "[klewy@arch] ";
                         should_render = true;
                     } else if (event.key.keysym.sym == SDLK_BACKSPACE) {
                         current_command.clear();
                         buffer.clear();
                         current_command = "";
                         should_render = true;
-                    } 
+                    }
                     break;
                 }
                 case SDL_MOUSEWHEEL: {
