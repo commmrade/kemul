@@ -11,7 +11,12 @@ pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
 pkg_check_modules(HARFBUZZ REQUIRED harfbuzz)
 
 add_executable(proj
-    main.cpp
+    src/main.cpp
+    src/Application.cpp
+    src/Window.cpp
+    src/Buffer.cpp
+    src/EventHandler.cpp
+    src/GlyphCache.cpp
 )
 
 target_link_libraries(proj
