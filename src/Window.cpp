@@ -80,15 +80,12 @@ void Window::draw(const TermBuffer& buffer) {
     cursor_pos_.x = 10;
     cursor_pos_.y = 10;
 
-    // std::cout << "Drawing\n";
     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
     for (auto i = scroll_offset_; i < buffer.get_buffer().size(); ++i) {
         std::vector<uint32_t> codepoints;
-      
         utf8::utf8to32(buffer.get_buffer()[i].cbegin(), buffer.get_buffer()[i].cend(), std::back_inserter(codepoints));
-        
         for (auto codepoint : codepoints) {
             
             auto* atlas = glyph_cache->atlas();
@@ -103,14 +100,10 @@ void Window::draw(const TermBuffer& buffer) {
                 cursor_pos_.y += src.h;
             }
         }
-
         if (i != buffer.get_buffer().size() - 1) {
             cursor_pos_.y += TTF_FontHeight(font_);
             cursor_pos_.x = 10;
-        } else {
-
         }
-
     }
     std::vector<uint32_t> codepoints;
     utf8::utf8to32(buffer.get_command().cbegin(), buffer.get_command().cend(), std::back_inserter(codepoints));
