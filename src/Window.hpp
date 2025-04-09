@@ -46,13 +46,13 @@ private:
     SDL_Renderer* renderer_{nullptr};
     TTF_Font* font_{nullptr};
 
-    std::unique_ptr<GlyphCache> glyph_cache;
+    std::unique_ptr<GlyphCache> glyph_cache_;
 public:
     explicit Window(const std::string& font_path);
     ~Window();
 
     void process();
-    void draw(const TermBuffer& buffer);
+    void draw(const TermBuffer& term_buffer);
 
     void set_should_render(bool value);
 

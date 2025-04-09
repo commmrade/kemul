@@ -29,7 +29,7 @@ Window::Window(const std::string& font_path) {
     load_font(font_path);
     
     auto max_size = get_max_texture_size();
-    glyph_cache = std::make_unique<GlyphCache>(renderer_, font_, max_size.first, max_size.second);
+    glyph_cache_ = std::make_unique<GlyphCache>(renderer_, font_, max_size.first, max_size.second);
 }
 Window::~Window() {
     SDL_DestroyWindow(window_);
@@ -71,7 +71,7 @@ void Window::process() {
 
 }
 
-void Window::draw(const TermBuffer& buffer) {
+void Window::draw(const TermBuffer& term_buffer) {
 
     if (!should_render_) {
         SDL_Delay(16);
@@ -83,14 +83,15 @@ void Window::draw(const TermBuffer& buffer) {
     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
-    for (auto i = scroll_offset_; i < buffer.get_buffer().size(); ++i) {
+    decltype(auto) buffer = term_buffer.get_buffer();
+    for (auto i = scroll_offset_; i < buffer.size(); ++i) {
         std::vector<uint32_t> codepoints;
-        utf8::utf8to32(buffer.get_buffer()[i].cbegin(), buffer.get_buffer()[i].cend(), std::back_inserter(codepoints));
+        utf8::utf8to32(buffer[i].cbegin(), buffer[i].cend(), std::back_inserter(codepoints));
         for (auto codepoint : codepoints) {
             
-            auto* atlas = glyph_cache->atlas();
+            auto* atlas = glyph_cache_->atlas();
 
-            SDL_Rect src = glyph_cache->get_or_create_glyph_pos(renderer_, codepoint);
+            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
@@ -100,18 +101,20 @@ void Window::draw(const TermBuffer& buffer) {
                 cursor_pos_.y += src.h;
             }
         }
-        if (i != buffer.get_buffer().size() - 1) {
+        if (i != buffer.size() - 1) {
             cursor_pos_.y += TTF_FontHeight(font_);
             cursor_pos_.x = 10;
         }
     }
+
+    decltype(auto) command = term_buffer.get_command();
     std::vector<uint32_t> codepoints;
-    utf8::utf8to32(buffer.get_command().cbegin(), buffer.get_command().cend(), std::back_inserter(codepoints));
+    utf8::utf8to32(command.cbegin(), command.cend(), std::back_inserter(codepoints));
     for (auto codepoint : codepoints) {
 
-        auto* atlas = glyph_cache->atlas();
+        auto* atlas = glyph_cache_->atlas();
 
-        SDL_Rect src = glyph_cache->get_or_create_glyph_pos(renderer_, codepoint);
+        SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
         SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
         SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
