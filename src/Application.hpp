@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL_keycode.h>
+#include <SDL2/SDL_keycode.h>
 #include <cstdint>
 #include <memory>
 #include <sys/poll.h>
@@ -19,7 +19,7 @@ private:
     // Settings stuff
     bool echo_enabled_{false};
     bool blocking_enabled_{false};
-    
+
     bool is_running_{true};
 
 
@@ -31,12 +31,12 @@ public:
     explicit Application(const std::string &font_path);
     ~Application();
 
-    
+
     void set_echo_mode(bool enabled);
     void set_blocking_mode(bool enabled);
 
     void run();
-    
+
 
     // Events
     void on_quit_event();

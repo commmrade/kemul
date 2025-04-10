@@ -1,5 +1,5 @@
-#pragma once 
-#include "SDL_stdinc.h"
+#pragma once
+#include "SDL2/SDL_stdinc.h"
 #include <string>
 #include <vector>
 
