@@ -23,6 +23,7 @@ target_link_libraries(proj
     SDL2::SDL2
     ${SDL2_TTF_LIBRARIES}
     ${HARFBUZZ_LIBRARIES}
+    -licuuc
 )
 
 target_include_directories(proj PRIVATE

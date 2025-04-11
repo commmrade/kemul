@@ -18,8 +18,19 @@
 #include <utility>
 #include "Buffer.hpp"
 #include "GlyphCache.hpp"
+#include <unicode/uchar.h>
 
 constexpr int FONT_PTSIZE = 14;
+
+
+// inline int cell_width(uint32_t codepoint) {
+//     if (codepoint == 0) return 1;
+//     if (u_getIntPropertyValue(codepoint, UCHAR_EAST_ASIAN_WIDTH) == U_EA_FULLWIDTH ||
+//         u_getIntPropertyValue(codepoint, UCHAR_EAST_ASIAN_WIDTH) == U_EA_WIDE) {
+//         return 2;
+//     }
+//     return 1;
+// }
 
 struct CursorPos {
     int x{0};
@@ -44,10 +55,11 @@ private:
     // Drawing (SDL) stuff;
     SDL_Window* window_{nullptr};
     SDL_Renderer* renderer_{nullptr};
-    TTF_Font* font_{nullptr};
+    
 
     std::unique_ptr<GlyphCache> glyph_cache_;
 public:
+    TTF_Font* font_{nullptr}; // temp
     explicit Window(const std::string& font_path);
     ~Window();
 

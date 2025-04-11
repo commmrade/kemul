@@ -22,7 +22,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <iostream>
-
+#include "ANSIParser.hpp"
 
 Application::Application(const std::string &font_path) {
     setup_pty();
@@ -33,9 +33,14 @@ Application::Application(const std::string &font_path) {
     
     set_blocking_mode(false);
 
+
     window_ = std::make_unique<Window>(font_path);
-    buffer_ = std::make_unique<TermBuffer>();
+
+    int font_w, font_h;
+    TTF_SizeText(window_->font_, "f", &font_w, &font_h);
+    buffer_ = std::make_unique<TermBuffer>(900, 600, font_w, font_h);
     event_handler_ = std::make_unique<EventHandler>(*this);
+    parser_ = std::make_unique<AnsiParser>(*this);
 }
 Application::~Application() {
     close(master_fd_);
@@ -99,6 +104,7 @@ void Application::run() {
     loop();
 }
 void Application::loop() {
+    std::string dirty_buffer;
     while (is_running_) {
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
@@ -113,16 +119,31 @@ void Application::loop() {
         if (fds_[0].revents & POLLIN) {
             char buf[256];
             ssize_t rd_size;
-
             std::string output{};
             output.reserve(256);
             while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
                 output.append(buf, rd_size);
             }
-        
+
+            // while (true) {
+            //     ssize_t rd_size = read(master_fd_, buf, sizeof(buf));
+            //     if (rd_size <= 0) break;
+            
+            //     dirty_buffer.append(buf, rd_size);
+            
+            //     size_t pos = 0;
+            //     while ((pos = dirty_buffer.find('\n')) != std::string::npos) {
+            //         std::string line = dirty_buffer.substr(0, pos);
+            //         // buffer_->push_str(line);
+            //         std::cout << line << std::endl;
+            //         parser_->parse(line);
+            //         dirty_buffer.erase(0, pos + 1);
+            //     }
+            // }
+
             std::istringstream ss{std::move(output)};
             std::string line;
-            while (std::getline(ss, line)) {
+            while (std::getline(ss, line, '\n')) {
                 buffer_->push_str(line);
             }
             window_->set_should_render(true);
@@ -140,7 +161,7 @@ void Application::on_textinput_event(const char* sym) {
 }
 void Application::on_enter_pressed_event() {
     write(master_fd_, "\n", 1);
-    buffer_->add_str(buffer_->get_command());
+    // buffer_->add_str(buffer_->get_command());
     buffer_->clear_command();
     window_->set_should_render(true);
 }
@@ -148,10 +169,23 @@ void Application::on_quit_event() {
     is_running_ = false;
 }
 void Application::on_keydown_event(SDL_Keycode key) {
-    std::cout << "Pressed some key\n";
+    
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
     std::cout << scroll_dir << std::endl;
     window_->scroll(scroll_dir);
     window_->set_should_render(true);
+}
+
+
+void Application::on_set_cells(std::vector<Cell> cells) {
+    buffer_->push_cells(std::move(cells));
+}
+void Application::on_move_cursor(int row, int col) {
+    std::cout << "on move\n";
+    buffer_->set_cursor(row, col);
+}
+
+void Application::on_paste_event(std::string content) {
+    on_textinput_event(content.c_str());
 }

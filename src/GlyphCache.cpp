@@ -19,8 +19,10 @@ void GlyphCache::add_glyph(SDL_Renderer* renderer, uint32_t codepoint) {
     SDL_Surface* glyph_surf = TTF_RenderUTF8_Blended(font_, utf8_char.c_str(), SDL_Color{200, 200, 200, 255});
     if (!glyph_surf) {
         std::cerr << "Glyph surface is null\n";
+        std::cout << "char '" << utf8_char << "'" << std::endl;
         return;
     }
+    
     SDL_Texture* glyph_texture = SDL_CreateTextureFromSurface(renderer, glyph_surf);
     if (!glyph_texture) {
         std::cerr << "Glyph texture is null\n";

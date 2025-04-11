@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <memory>
 #include <sys/poll.h>
-
+#include <vector>
 #include "Window.hpp"
 #include "Buffer.hpp"
 
-
+class AnsiParser;
 class EventHandler;
 class Application {
 private:
@@ -27,6 +27,7 @@ private:
     std::unique_ptr<Window> window_;
     std::unique_ptr<TermBuffer> buffer_;
     std::unique_ptr<EventHandler> event_handler_;
+    std::unique_ptr<AnsiParser> parser_;
 public:
     explicit Application(const std::string &font_path);
     ~Application();
@@ -44,7 +45,10 @@ public:
     void on_enter_pressed_event();
     void on_keydown_event(SDL_Keycode key);
     void on_scroll_event(Sint32 scroll_dir);
+    void on_paste_event(std::string content);
 
+    void on_set_cells(std::vector<Cell> cells);
+    void on_move_cursor(int row, int col);
 
     // Parser events
 private:

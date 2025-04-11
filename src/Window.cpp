@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <memory>
 #include <pty.h>
+#include <ranges>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
@@ -22,6 +23,10 @@
 #include <iostream>
 #include <utf8cpp/utf8.h>
 #include <utf8cpp/utf8/cpp11.h>
+#include <algorithm>
+
+
+
 
 Window::Window(const std::string& font_path) {
     std::cout << "Creating window\n";
@@ -72,7 +77,6 @@ void Window::process() {
 }
 
 void Window::draw(const TermBuffer& term_buffer) {
-
     if (!should_render_) {
         SDL_Delay(16);
         return;
@@ -85,45 +89,46 @@ void Window::draw(const TermBuffer& term_buffer) {
 
     decltype(auto) buffer = term_buffer.get_buffer();
     for (auto i = scroll_offset_; i < buffer.size(); ++i) {
-        std::vector<uint32_t> codepoints;
-        utf8::utf8to32(buffer[i].cbegin(), buffer[i].cend(), std::back_inserter(codepoints));
-        for (auto codepoint : codepoints) {
-            
+    
+        for (auto cell : buffer[i]) {
+            if (cell.codepoint == 0) continue;
             auto* atlas = glyph_cache_->atlas();
-
-            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
+            
+            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, cell.codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
+            
+            cursor_pos_.x += src.w;
+        }
+        cursor_pos_.x = 10;
+        cursor_pos_.y += TTF_FontHeight(font_);
+        if (i != buffer.size() - 1) {
+            // cursor_pos_.y += TTF_FontHeight(font_);
+            // cursor_pos_.x = 10;
+        }
+    }
+
+    {
+        cursor_pos_.x = 10;
+        decltype(auto) command = term_buffer.get_command();
+        std::cout << command << std::endl;
+        std::vector<uint32_t> codepoints;
+        utf8::utf8to32(command.cbegin(), command.cend(), std::back_inserter(codepoints));
+        for (auto codepoint : codepoints) {
+            auto* atlas = glyph_cache_->atlas();
+            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
+            SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
+            SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
+            std::cout << cursor_pos_.y << std::endl;
             cursor_pos_.x += src.w;
             if (cursor_pos_.x >= 900 - 50) {
                 cursor_pos_.x = 10;
                 cursor_pos_.y += src.h;
             }
         }
-        if (i != buffer.size() - 1) {
-            cursor_pos_.y += TTF_FontHeight(font_);
-            cursor_pos_.x = 10;
-        }
     }
-
-    decltype(auto) command = term_buffer.get_command();
-    std::vector<uint32_t> codepoints;
-    utf8::utf8to32(command.cbegin(), command.cend(), std::back_inserter(codepoints));
-    for (auto codepoint : codepoints) {
-
-        auto* atlas = glyph_cache_->atlas();
-
-        SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
-        SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
-        SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
-
-        cursor_pos_.x += src.w;
-        if (cursor_pos_.x >= 900 - 50) {
-            cursor_pos_.x = 10;
-            cursor_pos_.y += src.h;
-        }
-    }
+    
 
     SDL_RenderPresent(renderer_);
     should_render_ = false;
