@@ -124,6 +124,15 @@ void Application::loop() {
             while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
                 output.append(buf, rd_size);
             }
+            std::istringstream ss{std::move(output)};
+            std::string line;
+            while (std::getline(ss, line, '\n')) {
+                // buffer_->push_str(line);
+                parser_->parse(line);
+            }
+            window_->set_should_render(true);
+
+            // ==== OR
 
             // while (true) {
             //     ssize_t rd_size = read(master_fd_, buf, sizeof(buf));
@@ -141,12 +150,7 @@ void Application::loop() {
             //     }
             // }
 
-            std::istringstream ss{std::move(output)};
-            std::string line;
-            while (std::getline(ss, line, '\n')) {
-                buffer_->push_str(line);
-            }
-            window_->set_should_render(true);
+            
         }
 
         window_->process();
@@ -182,7 +186,6 @@ void Application::on_set_cells(std::vector<Cell> cells) {
     buffer_->push_cells(std::move(cells));
 }
 void Application::on_move_cursor(int row, int col) {
-    std::cout << "on move\n";
     buffer_->set_cursor(row, col);
 }
 

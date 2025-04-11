@@ -39,23 +39,6 @@ void TermBuffer::push_str(const std::string &str) {
         }
     }
 }
-void TermBuffer::add_str(std::string str) {
-    std::vector<uint32_t> codepoints;
-    utf8::utf8to32(str.cbegin(), str.cend(), std::back_inserter(codepoints));
-
-    for (auto codepoint : codepoints) {
-        Cell cell;
-        cell.codepoint = codepoint;
-        
-        buffer_[pos_y][pos_x] = cell;
-
-        ++pos_x;
-        if (pos_x >= width_cells_) {
-            ++pos_y;
-            pos_x = 0;
-        }
-    }
-}
 
 void TermBuffer::resize(int new_width, int new_height) {
 
@@ -74,6 +57,35 @@ void TermBuffer::push_cells(std::vector<Cell> cells) {
         buffer_[pos_y][pos_x] = std::move(cell);
         
         pos_x += 1;
+        if (pos_x >= width_cells_) {
+            ++pos_y;
+            pos_x = 0;
+        }
+    }
+}
+
+void TermBuffer::add_cells(std::vector<Cell> cells) {
+    for (auto &&cell : cells) {
+        buffer_[pos_y][pos_x] = std::move(cell);
+        
+        pos_x += 1;
+        if (pos_x >= width_cells_) {
+            ++pos_y;
+            pos_x = 0;
+        }
+    }
+}
+void TermBuffer::add_str(std::string str) {
+    std::vector<uint32_t> codepoints;
+    utf8::utf8to32(str.cbegin(), str.cend(), std::back_inserter(codepoints));
+
+    for (auto codepoint : codepoints) {
+        Cell cell;
+        cell.codepoint = codepoint;
+        
+        buffer_[pos_y][pos_x] = cell;
+
+        ++pos_x;
         if (pos_x >= width_cells_) {
             ++pos_y;
             pos_x = 0;

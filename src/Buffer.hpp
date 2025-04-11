@@ -44,6 +44,7 @@ public:
     void push_str(const std::string &str);
     void add_str(std::string str);
     void push_cells(std::vector<Cell> cells);
+    void add_cells(std::vector<Cell> cells);
 
     void add_str_command(const char* sym) {
         command_.append(sym, SDL_strlen(sym));
