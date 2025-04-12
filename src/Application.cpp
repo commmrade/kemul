@@ -33,7 +33,6 @@ Application::Application(const std::string &font_path) {
 
     
     set_blocking_mode(false);
-    set_echo_mode(false);
 
     window_ = std::make_unique<Window>(font_path);
 
