@@ -57,6 +57,7 @@ public:
     }
 
     void set_cursor(int row, int col);
+    void reset_cursor(bool x_dir, bool y_dir);
 
     void resize(int new_width, int new_height);
 

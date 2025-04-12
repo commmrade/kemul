@@ -112,7 +112,7 @@ void Window::draw(const TermBuffer& term_buffer) {
     {
         cursor_pos_.x = 10;
         decltype(auto) command = term_buffer.get_command();
-        std::cout << command << std::endl;
+        // std::cout << command << std::endl;
         std::vector<uint32_t> codepoints;
         utf8::utf8to32(command.cbegin(), command.cend(), std::back_inserter(codepoints));
         for (auto codepoint : codepoints) {
@@ -120,7 +120,7 @@ void Window::draw(const TermBuffer& term_buffer) {
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
-            std::cout << cursor_pos_.y << std::endl;
+            // std::cout << cursor_pos_.y << std::endl;
             cursor_pos_.x += src.w;
             if (cursor_pos_.x >= 900 - 50) {
                 cursor_pos_.x = 10;

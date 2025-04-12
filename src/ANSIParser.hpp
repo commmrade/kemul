@@ -23,7 +23,7 @@ class AnsiParser {
             current_cell.flags = 0;
         }
     
-        void parse(const std::string& text) {
+        void parse(const std::string& text, bool new_line = true) {
             std::string::const_iterator it = text.begin();
             while (it != text.end()) {
                 if (state == GeneralState::TEXT) {
@@ -31,11 +31,14 @@ class AnsiParser {
                         uint32_t codepoint = utf8::next(it, text.end());
                         if (codepoint == 0x1B) { // ESC character
                             state = GeneralState::ESCAPE;
+                        } else if (codepoint == 0x0D) { // Carriage Return ('\r', codepoint 13)
+                                application.on_reset_cursor(true, false);
+                                continue;  // Переходим к следующему символу
                         } else {
-                            // Create a cell with current attributes and add it to the buffer
-                            Cell cell = current_cell;
-                            cell.codepoint = codepoint;
-                            cells.push_back(cell);
+                        // Create a cell with current attributes and add it to the buffer
+                        Cell cell = current_cell;
+                        cell.codepoint = codepoint;
+                        cells.push_back(cell);
                         }
                     } catch (utf8::invalid_utf8&) {
                         ++it; // Skip invalid UTF-8 bytes
@@ -63,7 +66,12 @@ class AnsiParser {
             }
             // Send collected cells to Application after parsing
             if (!cells.empty()) {
-                application.on_set_cells(cells);
+                if (new_line) {
+                    application.on_set_cells(cells);
+                } else {
+                    application.on_add_cells(cells);
+                }
+                
                 cells.clear();
             }
         }

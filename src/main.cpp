@@ -33,10 +33,8 @@
 
 
 int main() {
-
     Application app{"Roboto-Regular.ttf"};
     app.run();
-
     SDL_Quit();
     return 0;
 }

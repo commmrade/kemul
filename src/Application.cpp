@@ -2,6 +2,7 @@
 #include "Buffer.hpp"
 #include "EventHandler.hpp"
 #include "Window.hpp"
+#include <algorithm>
 #include <fcntl.h>
 #include <memory>
 #include <pty.h>
@@ -117,40 +118,43 @@ void Application::loop() {
         }
 
         if (fds_[0].revents & POLLIN) {
-            char buf[256];
+            char buf[1024];
             ssize_t rd_size;
-            std::string output{};
-            output.reserve(256);
-            while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
-                output.append(buf, rd_size);
-            }
-            std::istringstream ss{std::move(output)};
-            std::string line;
-            while (std::getline(ss, line, '\n')) {
-                // buffer_->push_str(line);
-                parser_->parse(line);
-            }
-            window_->set_should_render(true);
+
+            // std::string output{};
+            // output.reserve(1024);
+            // while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
+            //     output.append(buf, rd_size);
+            // }
+            // std::istringstream ss{std::move(output)};
+            // std::string line;
+            // while (std::getline(ss, line, '\n')) {
+            //     parser_->parse(line);
+            // }
+            
 
             // ==== OR
 
-            // while (true) {
-            //     ssize_t rd_size = read(master_fd_, buf, sizeof(buf));
-            //     if (rd_size <= 0) break;
+            while (true) {
+                ssize_t rd_size = read(master_fd_, buf, sizeof(buf));
+                if (rd_size <= 0) break;
             
-            //     dirty_buffer.append(buf, rd_size);
+                dirty_buffer.append(buf, rd_size);
             
-            //     size_t pos = 0;
-            //     while ((pos = dirty_buffer.find('\n')) != std::string::npos) {
-            //         std::string line = dirty_buffer.substr(0, pos);
-            //         // buffer_->push_str(line);
-            //         std::cout << line << std::endl;
-            //         parser_->parse(line);
-            //         dirty_buffer.erase(0, pos + 1);
-            //     }
-            // }
+                size_t pos = 0;
+                while ((pos = dirty_buffer.find('\n')) != std::string::npos) {
+                    std::string line = dirty_buffer.substr(0, pos);
+                    // buffer_->push_str(line);
+                    parser_->parse(line);
+                    dirty_buffer.erase(0, pos + 1);
+                }
+            }
+            if (!dirty_buffer.empty()) {
+                parser_->parse(dirty_buffer);
+                dirty_buffer.clear();
+            }
 
-            
+            window_->set_should_render(true);
         }
 
         window_->process();
@@ -183,12 +187,20 @@ void Application::on_scroll_event(Sint32 scroll_dir) {
 
 
 void Application::on_set_cells(std::vector<Cell> cells) {
+    std::cout << cells.size() << "start ";
     buffer_->push_cells(std::move(cells));
 }
 void Application::on_move_cursor(int row, int col) {
     buffer_->set_cursor(row, col);
 }
+void Application::on_add_cells(std::vector<Cell> cells) {
+    std::cout << cells.size() << "start ";
+    buffer_->add_cells(std::move(cells));
+}
 
 void Application::on_paste_event(std::string content) {
     on_textinput_event(content.c_str());
+}
+void Application::on_reset_cursor(bool x_dir, bool y_dir) {
+
 }

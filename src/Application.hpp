@@ -48,7 +48,9 @@ public:
     void on_paste_event(std::string content);
 
     void on_set_cells(std::vector<Cell> cells);
+    void on_add_cells(std::vector<Cell> cells);
     void on_move_cursor(int row, int col);
+    void on_reset_cursor(bool x_dir, bool y_dir);
 
     // Parser events
 private:

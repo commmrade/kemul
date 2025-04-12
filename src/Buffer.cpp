@@ -49,6 +49,14 @@ void TermBuffer::set_cursor(int row, int col) {
     pos_y = row;
     std::cout << "set cursor\n";
 }
+void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
+    if (x_dir) {
+        pos_x = 0;
+    }
+    if (y_dir) {
+        pos_y = 0;
+    }
+}
 
 void TermBuffer::push_cells(std::vector<Cell> cells) {
     ++pos_y; // Add check
