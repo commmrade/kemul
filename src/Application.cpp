@@ -143,7 +143,6 @@ void Application::loop() {
                 size_t pos = 0;
                 while ((pos = dirty_buffer.find('\n')) != std::string::npos) {
                     std::string line = dirty_buffer.substr(0, pos);
-                    // buffer_->push_str(line);
                     parser_->parse(line);
                     dirty_buffer.erase(0, pos + 1);
                 }
