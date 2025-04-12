@@ -16,7 +16,7 @@ GlyphCache::~GlyphCache() {
 
 void GlyphCache::add_glyph(SDL_Renderer* renderer, uint32_t codepoint) {
     std::string utf8_char = utf8::utf32to8(std::u32string{codepoint});
-    SDL_Surface* glyph_surf = TTF_RenderUTF8_Blended(font_, utf8_char.c_str(), SDL_Color{200, 200, 200, 255});
+    SDL_Surface* glyph_surf = TTF_RenderUTF8_Blended(font_, utf8_char.c_str(), SDL_Color{255, 255, 255, 255});
     if (!glyph_surf) {
         std::cerr << "Glyph surface is null\n";
         std::cout << "char '" << utf8_char << "'" << std::endl;

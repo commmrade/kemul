@@ -19,6 +19,10 @@ TermBuffer::~TermBuffer() {
 
 }
 
+void TermBuffer::clear_all() {
+    reset();
+}
+
 void TermBuffer::push_str(const std::string &str) {
     std::vector<uint32_t> codepoints;
     ++pos_y; // Add check
@@ -40,8 +44,14 @@ void TermBuffer::push_str(const std::string &str) {
     }
 }
 
-void TermBuffer::resize(int new_width, int new_height) {
+void TermBuffer::resize(int new_width, int new_height, int font_width, int font_height) {
 
+}
+void TermBuffer::reset() {
+    buffer_.clear();
+    buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
+    pos_x = 0;
+    pos_y = 0;
 }
 
 void TermBuffer::set_cursor(int row, int col) {
@@ -59,14 +69,14 @@ void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
 }
 
 void TermBuffer::push_cells(std::vector<Cell> cells) {
-    ++pos_y; // Add check
+    cursor_down();
     pos_x = 0; // Reset x
     for (auto &&cell : cells) {
         buffer_[pos_y][pos_x] = std::move(cell);
         
         pos_x += 1;
         if (pos_x >= width_cells_) {
-            ++pos_y;
+            cursor_down();
             pos_x = 0;
         }
     }
@@ -78,7 +88,7 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
         
         pos_x += 1;
         if (pos_x >= width_cells_) {
-            ++pos_y;
+            cursor_down();
             pos_x = 0;
         }
     }
@@ -95,8 +105,23 @@ void TermBuffer::add_str(std::string str) {
 
         ++pos_x;
         if (pos_x >= width_cells_) {
-            ++pos_y;
+            cursor_down();
             pos_x = 0;
         }
+    }
+}
+void TermBuffer::add_str_command(const char* sym) {
+    command_.append(sym, SDL_strlen(sym));
+    add_str(sym);
+}
+
+void TermBuffer::clear_command() {
+    command_.clear();
+    command_ = "";
+}
+
+void TermBuffer::cursor_down() {
+    if (++pos_y == buffer_.size()) {
+        buffer_.emplace_back(width_cells_);
     }
 }

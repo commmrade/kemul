@@ -1,5 +1,6 @@
 #include "EventHandler.hpp"
 #include <SDL_clipboard.h>
+#include <SDL_keycode.h>
 
 EventHandler::EventHandler(Application& application) : application(application) {
     
@@ -18,6 +19,8 @@ void EventHandler::handle_event(SDL_Event& event) {
                 char* clipboard_text = SDL_GetClipboardText();
                 application.on_paste_event(clipboard_text);
                 delete clipboard_text;
+            } else if (event.key.keysym.sym == SDLK_l && (event.key.keysym.mod & KMOD_CTRL)) {
+                application.on_clear_requested();
             } else {
                 application.on_keydown_event(event.key.keysym.sym);
             }

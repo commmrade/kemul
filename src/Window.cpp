@@ -96,9 +96,10 @@ void Window::draw(const TermBuffer& term_buffer) {
             
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, cell.codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
+
+            SDL_SetTextureColorMod(atlas, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b);
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
-            
             cursor_pos_.x += src.w;
         }
         cursor_pos_.x = 10;
@@ -135,7 +136,6 @@ void Window::draw(const TermBuffer& term_buffer) {
 }
 
 void Window::scroll(Sint32 dir) {
-  
     if (dir < 0) {
         scroll_offset_ += scroll_step_;
     } else if (dir > 0) {

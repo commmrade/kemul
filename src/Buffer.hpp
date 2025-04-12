@@ -46,20 +46,19 @@ public:
     void push_cells(std::vector<Cell> cells);
     void add_cells(std::vector<Cell> cells);
 
-    void add_str_command(const char* sym) {
-        command_.append(sym, SDL_strlen(sym));
-        add_str(sym);
-    }
+    void add_str_command(const char* sym);
 
-    void clear_command() {
-        command_.clear();
-        command_ = "";
-    }
+
+    void clear_command();
+    void clear_all();
 
     void set_cursor(int row, int col);
     void reset_cursor(bool x_dir, bool y_dir);
 
-    void resize(int new_width, int new_height);
+    void resize(int new_width, int new_height, int font_width, int font_height);
+    void reset();
+
+    void cursor_down();
 
     const std::vector<std::vector<Cell>>& get_buffer() const {
         return buffer_;

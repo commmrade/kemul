@@ -17,6 +17,7 @@ add_executable(proj
     src/Buffer.cpp
     src/EventHandler.cpp
     src/GlyphCache.cpp
+    src/ANSIParser.cpp
 )
 
 target_link_libraries(proj

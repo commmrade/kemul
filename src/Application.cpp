@@ -33,7 +33,7 @@ Application::Application(const std::string &font_path) {
 
     
     set_blocking_mode(false);
-
+    set_echo_mode(false);
 
     window_ = std::make_unique<Window>(font_path);
 
@@ -202,5 +202,10 @@ void Application::on_paste_event(std::string content) {
     on_textinput_event(content.c_str());
 }
 void Application::on_reset_cursor(bool x_dir, bool y_dir) {
+    buffer_->reset_cursor(x_dir, y_dir);
+}
 
+void Application::on_clear_requested() {
+    buffer_->clear_all();
+    window_->set_should_render(true);
 }
