@@ -75,7 +75,8 @@ public:
 
     void set_should_render(bool value);
 
-    std::pair<int, int> get_max_texture_size();
+    std::pair<int, int> get_max_texture_size() const;
+    std::pair<int, int> get_font_size() const;
 
     void scroll(Sint32 dir);
 

@@ -59,7 +59,7 @@ private:
     void init_sdl();
     void init_ttf();
 
-    void setup_pty();
+    void setup_pty(bool echo);
 
     void loop();
 };

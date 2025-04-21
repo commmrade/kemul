@@ -42,10 +42,15 @@ Window::~Window() {
     TTF_CloseFont(font_);
 }
 
-std::pair<int, int> Window::get_max_texture_size() {
+std::pair<int, int> Window::get_max_texture_size() const {
     SDL_RendererInfo info;
     SDL_GetRendererInfo(renderer_, &info);
     return {info.max_texture_width, info.max_texture_height};
+}
+std::pair<int, int> Window::get_font_size() const {
+    int width, height;
+    TTF_SizeText(font_, " ", &width, &height);
+    return {width, height};
 }
 
 void Window::init() {

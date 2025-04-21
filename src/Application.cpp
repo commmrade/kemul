@@ -26,19 +26,16 @@
 #include "ANSIParser.hpp"
 
 Application::Application(const std::string &font_path, int width, int height) {
-    setup_pty();
+    setup_pty(false);
 
     init_sdl();
     init_ttf();
-
-    
     set_blocking_mode(false);
 
     window_ = std::make_unique<Window>(font_path);
 
-    int font_w, font_h;
-    TTF_SizeText(window_->font_, " ", &font_w, &font_h);
-    buffer_ = std::make_unique<TermBuffer>(width, height, font_w, font_h);
+    auto font_size = window_->get_font_size();
+    buffer_ = std::make_unique<TermBuffer>(width, height, font_size.first, font_size.second);
     event_handler_ = std::make_unique<EventHandler>(*this);
     parser_ = std::make_unique<AnsiParser>(*this);
 }
@@ -59,12 +56,12 @@ void Application::init_ttf() {
     }
 }
 
-void Application::setup_pty() {
+void Application::setup_pty(bool echo) {
 
     char slave_name[128];
     int slave_id = forkpty(&master_fd_, slave_name, NULL, NULL);
     slave_fd_ = open(slave_name, O_RDONLY);
-    set_echo_mode(false);
+    set_echo_mode(echo);
 
     if (slave_id < 0) {
         throw std::runtime_error("Could not fork properly");
