@@ -105,7 +105,6 @@ void Window::draw(const TermBuffer& term_buffer) {
             SDL_SetTextureColorMod(atlas, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b);
 
             if (cell.bg_color != SDL_Color{0, 0, 0, 255}) { // Default background
-                std::cout << "here " << (int)cursor_pos_.x << " " << (int)cursor_pos_.y << " " << (int)src.h << std::endl;
                 SDL_SetRenderDrawColor(renderer_, cell.bg_color.r, cell.bg_color.g, cell.bg_color.b, cell.bg_color.a);
                 SDL_Rect glyph_rect{ cursor_pos_.x, cursor_pos_.y, src.w, src.h};
                 SDL_RenderFillRect(renderer_, &glyph_rect);
@@ -113,8 +112,8 @@ void Window::draw(const TermBuffer& term_buffer) {
             }
 
             if (cell.is_underline()) {
-                SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
-                SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h, cursor_pos_.x + src.w, cursor_pos_.y + src.h);
+                SDL_SetRenderDrawColor(renderer_, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b, cell.fg_color.a);
+                SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h - src.h / 5, cursor_pos_.x + src.w, cursor_pos_.y + src.h - src.h / 5);
             }
 
             if (cell.is_bold()) {
@@ -148,6 +147,8 @@ void Window::draw(const TermBuffer& term_buffer) {
             auto* atlas = glyph_cache_->atlas();
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
+
+
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
             // std::cout << cursor_pos_.y << std::endl;
             cursor_pos_.x += src.w;
