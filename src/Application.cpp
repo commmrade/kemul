@@ -207,5 +207,5 @@ void Application::on_clear_requested() {
 }
 
 void Application::on_change_window_title(const std::string& win_title) {
-
+    window_->set_window_title(win_title);
 }
