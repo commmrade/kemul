@@ -9,6 +9,7 @@
 
 GlyphCache::GlyphCache(SDL_Renderer* renderer, TTF_Font* font, int max_width, int max_height) : font_(font), max_width_(max_width), max_height_(max_height) {
     atlas_texture_ = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, max_width, max_height);
+    SDL_SetTextureBlendMode(atlas_texture_, SDL_BLENDMODE_BLEND); // So there is no black rectangle around glyphs which makes drawing BG color impossible
 }
 GlyphCache::~GlyphCache() {
     SDL_DestroyTexture(atlas_texture_);

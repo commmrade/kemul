@@ -29,7 +29,7 @@ private:
     std::unique_ptr<EventHandler> event_handler_;
     std::unique_ptr<AnsiParser> parser_;
 public:
-    explicit Application(const std::string &font_path);
+    explicit Application(const std::string &font_path, int width = 900, int height = 600);
     ~Application();
 
 
@@ -52,6 +52,7 @@ public:
     void on_move_cursor(int row, int col);
     void on_reset_cursor(bool x_dir, bool y_dir);
     void on_clear_requested();
+    void on_change_window_title(const std::string& win_title);
 
     // Parser events
 private:

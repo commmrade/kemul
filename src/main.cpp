@@ -33,7 +33,7 @@
 
 
 int main() {
-    Application app{"Roboto-Regular.ttf"};
+    Application app{"FiraCode-Regular.ttf"};
     app.run();
     SDL_Quit();
     return 0;

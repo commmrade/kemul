@@ -20,8 +20,8 @@
 #include "GlyphCache.hpp"
 #include <unicode/uchar.h>
 
-constexpr int FONT_PTSIZE = 14;
-
+constexpr int FONT_PTSIZE = 16;
+// echo -e "\033[48;5;2m Test Backgroundsdasd \033[0m"
 
 // inline int cell_width(uint32_t codepoint) {
 //     if (codepoint == 0) return 1;
@@ -31,6 +31,13 @@ constexpr int FONT_PTSIZE = 14;
 //     }
 //     return 1;
 // }
+
+bool inline operator==(const SDL_Color& lhs, const SDL_Color& rhs) {
+    if (lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b && lhs.a == rhs.a) {
+        return true;
+    }
+    return false;
+}
 
 struct CursorPos {
     int x{0};
@@ -71,6 +78,8 @@ public:
     std::pair<int, int> get_max_texture_size();
 
     void scroll(Sint32 dir);
+
+    void set_window_title(const std::string& win_title);
 
 private:
     void load_font(const std::string& font_path);

@@ -98,6 +98,29 @@ void Window::draw(const TermBuffer& term_buffer) {
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
 
             SDL_SetTextureColorMod(atlas, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b);
+
+            if (cell.bg_color != SDL_Color{0, 0, 0, 255}) { // Default background
+                std::cout << "here " << (int)cursor_pos_.x << " " << (int)cursor_pos_.y << " " << (int)src.h << std::endl;
+                SDL_SetRenderDrawColor(renderer_, cell.bg_color.r, cell.bg_color.g, cell.bg_color.b, cell.bg_color.a);
+                SDL_Rect glyph_rect{ cursor_pos_.x, cursor_pos_.y, src.w, src.h};
+                SDL_RenderFillRect(renderer_, &glyph_rect);
+                SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
+            }
+
+            if (cell.is_underline()) {
+                SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
+                SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h, cursor_pos_.x + src.w, cursor_pos_.y + src.h);
+            }
+
+            if (cell.is_bold()) {
+                SDL_SetTextureColorMod(atlas, 255, 255, 255);
+            }
+
+            if (cell.is_strikethrough()) {
+                SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
+                SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h / 2, cursor_pos_.x + src.w, cursor_pos_.y + src.h / 2);
+            }
+
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
             cursor_pos_.x += src.w;
@@ -143,4 +166,8 @@ void Window::scroll(Sint32 dir) {
             scroll_offset_ -= scroll_step_;
         }
     }
+}
+
+void Window::set_window_title(const std::string& win_title) {
+    SDL_SetWindowTitle(window_, win_title.c_str());
 }

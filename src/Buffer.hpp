@@ -15,11 +15,51 @@ inline int cell_width(uint32_t codepoint) {
     return 1;
 }
 
+
+
+// 0000 0000 0000 0001 - underline
+// 0000 0000 0000 0010 - bold
+// 0000 0000 0000 0100 - strikethrough
+
+
 struct Cell {
     uint32_t codepoint;
     SDL_Color fg_color{200, 200, 200, 255};
-    SDL_Color bg_color;
-    uint16_t flags; // Underline, bold, etc
+    SDL_Color bg_color{0, 0, 0, 255};
+    uint16_t flags{0}; // Underline, bold, etc
+
+    void set_underline(bool value = true) {
+        if (!value) {
+            flags &= ~0b0000'0000'0000'0001;
+            return;
+        }
+        flags |= 0b0000'0000'0000'0001;
+    }
+    bool is_underline() const {
+        return flags & 0b0000'0000'0000'0001;
+    }
+
+    void set_bold(bool value = true) {
+        if (!value) {
+            flags &= ~0b0000'0000'0000'0010;
+            return;
+        }
+        flags |= 0b0000'0000'0000'0010;
+    }
+    bool is_bold() const {
+        return flags & 0b0000'0000'0000'0010;
+    }
+
+    void set_strikethrough(bool value = true) {
+        if (!value) {
+            flags &= ~0b0000'0000'0000'0100;
+            return;
+        }
+        flags |= 0b0000'0000'0000'0100;
+    }
+    bool is_strikethrough() const {
+        return flags & 0b0000'0000'0000'0100;
+    }
 };
 
 class TermBuffer {

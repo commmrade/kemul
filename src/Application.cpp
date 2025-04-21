@@ -25,7 +25,7 @@
 #include <iostream>
 #include "ANSIParser.hpp"
 
-Application::Application(const std::string &font_path) {
+Application::Application(const std::string &font_path, int width, int height) {
     setup_pty();
 
     init_sdl();
@@ -37,8 +37,8 @@ Application::Application(const std::string &font_path) {
     window_ = std::make_unique<Window>(font_path);
 
     int font_w, font_h;
-    TTF_SizeText(window_->font_, "f", &font_w, &font_h);
-    buffer_ = std::make_unique<TermBuffer>(900, 600, font_w, font_h);
+    TTF_SizeText(window_->font_, " ", &font_w, &font_h);
+    buffer_ = std::make_unique<TermBuffer>(width, height, font_w, font_h);
     event_handler_ = std::make_unique<EventHandler>(*this);
     parser_ = std::make_unique<AnsiParser>(*this);
 }
@@ -185,14 +185,12 @@ void Application::on_scroll_event(Sint32 scroll_dir) {
 
 
 void Application::on_set_cells(std::vector<Cell> cells) {
-    std::cout << cells.size() << "start ";
     buffer_->push_cells(std::move(cells));
 }
 void Application::on_move_cursor(int row, int col) {
     buffer_->set_cursor(row, col);
 }
 void Application::on_add_cells(std::vector<Cell> cells) {
-    std::cout << cells.size() << "start ";
     buffer_->add_cells(std::move(cells));
 }
 
@@ -206,4 +204,8 @@ void Application::on_reset_cursor(bool x_dir, bool y_dir) {
 void Application::on_clear_requested() {
     buffer_->clear_all();
     window_->set_should_render(true);
+}
+
+void Application::on_change_window_title(const std::string& win_title) {
+
 }

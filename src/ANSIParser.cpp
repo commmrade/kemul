@@ -31,7 +31,7 @@ void AnsiParser::parse(const std::string& text, bool new_line) {
                 cells.push_back(cell);
                 }
             } catch (utf8::invalid_utf8&) {
-                ++it; // Skip invalid UTF-8 bytes
+                ++it;
             }
         } else if (state == GeneralState::ESCAPE) {
             if (it != text.end()) {
@@ -46,6 +46,21 @@ void AnsiParser::parse(const std::string& text, bool new_line) {
                     if (it != text.end()) {
                         char command = *it++;
                         handleCSI(command, parseParams(csi_sequence));
+                    }
+                    state = GeneralState::TEXT;
+                } else if (c == ']') { // Handle OSC sequences
+                    std::string osc_sequence;
+                    while (it != text.end() && *it != '\a' && *it != 0x1B) { // OSC ends with BEL (\a) or ESC
+                        osc_sequence += *it++;
+                        it++;
+                    }
+                    application.on_change_window_title(osc_sequence);
+                    if (it != text.end()) {
+                        if (*it == '\a') {
+                            ++it; // Consume /a
+                        } else if (*it == 0x1B && it + 1 != text.end() && *(it + 1) == '\\') {
+                            it += 2; /* Consume ESC and \ */
+                        }
                     }
                     state = GeneralState::TEXT;
                 } else {
@@ -80,7 +95,7 @@ std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
                 params.push_back(std::stoi(param.substr(1))); // Store number after '?'
                 params.push_back(-1); // Indicator for private mode
             } catch (const std::invalid_argument&) {
-                // Invalid private mode parameter, skip or handle
+                // Skip for now
             }
         } else {
             try {
@@ -104,7 +119,7 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
         {255, 0, 255, 255},   // Magenta
         {0, 255, 255, 255},   // Cyan
         {255, 255, 255, 255}  // White
-    };
+    }; // Perhaps add more colors
 
     if (command == 'm') { // Select Graphic Rendition (SGR)
         for (int param : params) {
@@ -113,12 +128,20 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
                 current_cell.bg_color = {0, 0, 0, 255};
                 current_cell.flags = 0;
             } else if (param == 1) {
-                current_cell.flags |= 1; // Bold (assuming flag bit 0)
+                current_cell.set_bold();
+            } else if (param == 22) {
+                current_cell.set_bold(false);
             } else if (param == 4) {
-                current_cell.flags |= 2; // Underline (assuming flag bit 1)
+                current_cell.set_underline();
+            } else if (param == 24) {
+                current_cell.set_underline(false);
+            } else if (param == 9) {
+                current_cell.set_strikethrough();
+            } else if (param == 29) {
+                current_cell.set_strikethrough(false);
             } else if (30 <= param && param <= 37) {
                 current_cell.fg_color = color_map[param - 30];
-            } else if (40 <= param && param <= 47) {
+            } else if (40 <= param && param <= 48) {
                 current_cell.bg_color = color_map[param - 40];
             }
         }
@@ -127,18 +150,18 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
         int col = params.size() >= 2 ? params[1] : 1;
         application.on_move_cursor(row, col);
     } else if (command == 'J' && params.size() >= 1 && params[0] == 2) {
-        application.on_clear_requested(); // Clear screen (mode 2)
+        application.on_clear_requested(); // Clear screen
     } else if (command == 'A') { // Cursor up
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.move_cursor_relative(-n, 0);
+        // application.on_move_cursor_relative(-n, 0);
     } else if (command == 'B') { // Cursor down
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.move_cursor_relative(n, 0);
+        // application.on_move_cursor_relative(n, 0);
     } else if (command == 'C') { // Cursor forward
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.move_cursor_relative(0, n);
+        // application.on_move_cursor_relative(0, n);
     } else if (command == 'D') { // Cursor backward
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.move_cursor_relative(0, -n);
-    }
+        // application.on_move_cursor_relative(0, -n);
+    } 
 }
