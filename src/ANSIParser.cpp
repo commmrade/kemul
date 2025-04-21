@@ -52,8 +52,8 @@ void AnsiParser::parse(const std::string& text, bool new_line) {
                     std::string osc_sequence;
                     while (it != text.end() && *it != '\a' && *it != 0x1B) { // OSC ends with BEL (\a) or ESC
                         osc_sequence += *it++;
-                        it++;
                     }
+
                     application.on_change_window_title(osc_sequence);
                     if (it != text.end()) {
                         if (*it == '\a') {
@@ -76,7 +76,7 @@ void AnsiParser::parse(const std::string& text, bool new_line) {
         } else {
             application.on_add_cells(cells);
         }
-        
+
         cells.clear();
     }
 }
@@ -163,5 +163,5 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'D') { // Cursor backward
         int n = params.size() >= 1 ? params[0] : 1;
         // application.on_move_cursor_relative(0, -n);
-    } 
+    }
 }
