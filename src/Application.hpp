@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL2/SDL_keycode.h>
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <sys/poll.h>
 #include <vector>
@@ -47,12 +48,14 @@ public:
     void on_scroll_event(Sint32 scroll_dir);
     void on_paste_event(std::string content);
 
-    void on_set_cells(std::vector<Cell> cells);
     void on_add_cells(std::vector<Cell> cells);
+    void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);
+
     void on_reset_cursor(bool x_dir, bool y_dir);
     void on_clear_requested();
     void on_change_window_title(const std::string& win_title);
+
 
     // Parser events
 private:

@@ -9,7 +9,7 @@ class AnsiParser {
     private:
         Application& application;      // Reference to the Application instance
         Cell current_cell;            // Current state of cell attributes
-        std::vector<Cell> cells;      // Buffer of parsed cells
+        // std::vector<Cell> cells;      // Buffer of parsed cells
     
         // State machine states
         enum class GeneralState { TEXT, ESCAPE, CSI };
@@ -18,8 +18,9 @@ class AnsiParser {
     public:
         AnsiParser(Application& app);
     
-        void parse(const std::string& text, bool new_line = true);
-    
+        void parse(const std::string& text);
+
+        void parse_input(const std::string& text);
     private:
         // Parse CSI parameters (e.g., "1;31" -> {1, 31})
         std::vector<int> parseParams(const std::string& csi_sequence);

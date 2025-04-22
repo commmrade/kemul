@@ -13,7 +13,24 @@ AnsiParser::AnsiParser(Application& app) : application(app) {
     current_cell.flags = 0;
 }
 
-void AnsiParser::parse(const std::string& text, bool new_line) {
+
+void AnsiParser::parse_input(const std::string& text) {
+    std::vector<Cell> cells;
+    auto it = text.begin();
+    while (it != text.end()) {
+        Cell cell = current_cell;
+        uint32_t codepoint = utf8::next(it, text.end());
+        cell.codepoint = codepoint;
+        cells.push_back(cell);
+    }
+
+    if (!cells.empty()) {
+        // on user_input
+        application.on_add_cells(std::move(cells));
+    }
+}
+
+void AnsiParser::parse(const std::string& text) {
     std::string::const_iterator it = text.begin();
     while (it != text.end()) {
         if (state == GeneralState::TEXT) {
@@ -22,13 +39,13 @@ void AnsiParser::parse(const std::string& text, bool new_line) {
                 if (codepoint == 0x1B) { // ESC character
                     state = GeneralState::ESCAPE;
                 } else if (codepoint == 0x0D) { // Carriage Return ('\r', codepoint 13)
-                        application.on_reset_cursor(true, false);
-                        continue;  // Переходим к следующему символу
+                    application.on_reset_cursor(true, false);
+                    continue;  // Переходим к следующему символу
                 } else {
-                // Create a cell with current attributes and add it to the buffer
+                // Create a cell with current attribs and add it to the buffer
                 Cell cell = current_cell;
                 cell.codepoint = codepoint;
-                cells.push_back(cell);
+                application.on_add_cells({cell});
                 }
             } catch (utf8::invalid_utf8&) {
                 ++it;
@@ -68,16 +85,6 @@ void AnsiParser::parse(const std::string& text, bool new_line) {
                 }
             }
         }
-    }
-    // Send collected cells to Application after parsing
-    if (!cells.empty()) {
-        if (new_line) {
-            application.on_set_cells(cells);
-        } else {
-            application.on_add_cells(cells);
-        }
-
-        cells.clear();
     }
 }
 
@@ -148,20 +155,20 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'H') { // Cursor position
         int row = params.size() >= 1 ? params[0] : 1;
         int col = params.size() >= 2 ? params[1] : 1;
-        application.on_move_cursor(row, col);
+        application.on_set_cursor(row, col);
     } else if (command == 'J' && params.size() >= 1 && params[0] == 2) {
         application.on_clear_requested(); // Clear screen
     } else if (command == 'A') { // Cursor up
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.on_move_cursor_relative(-n, 0);
+        application.on_move_cursor(-n, 0);
     } else if (command == 'B') { // Cursor down
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.on_move_cursor_relative(n, 0);
+        application.on_move_cursor(n, 0);
     } else if (command == 'C') { // Cursor forward
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.on_move_cursor_relative(0, n);
+        application.on_move_cursor(0, n);
     } else if (command == 'D') { // Cursor backward
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.on_move_cursor_relative(0, -n);
+        application.on_move_cursor(0, -n);
     }
 }

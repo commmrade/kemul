@@ -117,37 +117,13 @@ void Application::loop() {
             char buf[1024];
             ssize_t rd_size;
 
-            // std::string output{};
-            // output.reserve(1024);
-            // while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
-            //     output.append(buf, rd_size);
-            // }
-            // std::istringstream ss{std::move(output)};
-            // std::string line;
-            // while (std::getline(ss, line, '\n')) {
-            //     parser_->parse(line);
-            // }
-            
-
-            // ==== OR
-
-            while (true) {
-                ssize_t rd_size = read(master_fd_, buf, sizeof(buf));
-                if (rd_size <= 0) break;
-            
-                dirty_buffer.append(buf, rd_size);
-            
-                size_t pos = 0;
-                while ((pos = dirty_buffer.find('\n')) != std::string::npos) {
-                    std::string line = dirty_buffer.substr(0, pos);
-                    parser_->parse(line);
-                    dirty_buffer.erase(0, pos + 1);
-                }
+            std::string output{};
+            output.reserve(1024);
+            while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
+                output.append(buf, rd_size);
             }
-            if (!dirty_buffer.empty()) {
-                parser_->parse(dirty_buffer);
-                dirty_buffer.clear();
-            }
+            parser_->parse(output);
+            
 
             window_->set_should_render(true);
         }
@@ -159,13 +135,11 @@ void Application::loop() {
 
 void Application::on_textinput_event(const char* sym) {
     write(master_fd_, sym, SDL_strlen(sym));
-    buffer_->add_str_command(sym);
+    parser_->parse_input(sym);
     window_->set_should_render(true);
 }
 void Application::on_enter_pressed_event() {
     write(master_fd_, "\n", 1);
-    // buffer_->add_str(buffer_->get_command());
-    buffer_->clear_command();
     window_->set_should_render(true);
 }
 void Application::on_quit_event() {
@@ -180,13 +154,15 @@ void Application::on_scroll_event(Sint32 scroll_dir) {
     window_->set_should_render(true);
 }
 
+void Application::on_set_cursor(int row, int col) {
+    buffer_->set_cursor_position(row, col);
+}
 
-void Application::on_set_cells(std::vector<Cell> cells) {
-    buffer_->push_cells(std::move(cells));
-}
 void Application::on_move_cursor(int row, int col) {
-    buffer_->set_cursor(row, col);
+    buffer_->move_cursor_pos_relative(row, col);
 }
+
+
 void Application::on_add_cells(std::vector<Cell> cells) {
     buffer_->add_cells(std::move(cells));
 }

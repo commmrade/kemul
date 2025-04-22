@@ -96,7 +96,7 @@ void Window::draw(const TermBuffer& term_buffer) {
     for (auto i = scroll_offset_; i < buffer.size(); ++i) {
     
         for (auto cell : buffer[i]) {
-            if (cell.codepoint == 0) continue;
+            if (cell.codepoint == 0) cell.codepoint = ' ';
             auto* atlas = glyph_cache_->atlas();
             
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, cell.codepoint);
@@ -127,38 +127,28 @@ void Window::draw(const TermBuffer& term_buffer) {
 
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
+            
+
             cursor_pos_.x += src.w;
+
+            
         }
         cursor_pos_.x = 10;
         cursor_pos_.y += TTF_FontHeight(font_);
-        if (i != buffer.size() - 1) {
-            // cursor_pos_.y += TTF_FontHeight(font_);
-            // cursor_pos_.x = 10;
-        }
+        // if (i != buffer.size() - 1) {
+        //     // cursor_pos_.y += TTF_FontHeight(font_);
+        //     // cursor_pos_.x = 10;
+        // }
     }
 
-    {
-        cursor_pos_.x = 10;
-        decltype(auto) command = term_buffer.get_command();
-        // std::cout << command << std::endl;
-        std::vector<uint32_t> codepoints;
-        utf8::utf8to32(command.cbegin(), command.cend(), std::back_inserter(codepoints));
-        for (auto codepoint : codepoints) {
-            auto* atlas = glyph_cache_->atlas();
-            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, codepoint);
-            SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
 
-
-            SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
-            // std::cout << cursor_pos_.y << std::endl;
-            cursor_pos_.x += src.w;
-            if (cursor_pos_.x >= 900 - 50) {
-                cursor_pos_.x = 10;
-                cursor_pos_.y += src.h;
-            }
-        }
-    }
+    auto font_size = get_font_size();
+    auto [cursor_x, cursor_y] = term_buffer.get_cursor_pos();
     
+    const auto& row = buffer[cursor_y];
+    SDL_Rect cursor_rect{cursor_x * font_size.first + font_size.first, (cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, 10, font_size.second};
+    SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
+    SDL_RenderFillRect(renderer_, &cursor_rect);    
 
     SDL_RenderPresent(renderer_);
     should_render_ = false;

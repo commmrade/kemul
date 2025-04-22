@@ -3,6 +3,7 @@
 #include <SDL_pixels.h>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 #include <unicode/uchar.h>
 
@@ -75,35 +76,31 @@ private:
     int font_height_;
 
 
-    std::string command_;
 
 public:
     explicit TermBuffer(int width, int height, int font_width, int font_height);
     ~TermBuffer();
 
-    void push_str(const std::string &str);
-    void add_str(std::string str);
-    void push_cells(std::vector<Cell> cells);
     void add_cells(std::vector<Cell> cells);
 
-    void add_str_command(const char* sym);
-
-
-    void clear_command();
     void clear_all();
 
-    void set_cursor(int row, int col);
+    void set_cursor_position(int row, int col);
+    void move_cursor_pos_relative(int row, int col);
     void reset_cursor(bool x_dir, bool y_dir);
+
 
     void resize(int new_width, int new_height, int font_width, int font_height);
     void reset();
 
     void cursor_down();
+    void expand_down(int n = 1);
 
     const std::vector<std::vector<Cell>>& get_buffer() const {
         return buffer_;
     }
-    const std::string& get_command() const {
-        return command_;
+
+    const std::pair<int, int> get_cursor_pos() const {
+        return {pos_x, pos_y};
     }
 };

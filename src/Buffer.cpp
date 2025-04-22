@@ -1,5 +1,6 @@
 #include "Buffer.hpp"
 #include <cstdint>
+#include <exception>
 #include <iterator>
 #include <vector>
 #include <utf8cpp/utf8.h>
@@ -23,26 +24,6 @@ void TermBuffer::clear_all() {
     reset();
 }
 
-void TermBuffer::push_str(const std::string &str) {
-    std::vector<uint32_t> codepoints;
-    ++pos_y; // Add check
-    pos_x = 0; // Reset x
-    utf8::utf8to32(str.cbegin(), str.cend(), std::back_inserter(codepoints));
-    for (auto codepoint : codepoints) {
-        Cell cell;
-        cell.codepoint = codepoint;
-
-
-        buffer_[pos_y][pos_x] = std::move(cell);
-        
-        pos_x += 1;
-        if (pos_x >= width_cells_) {
-            std::cout << str << std::endl;
-            ++pos_y;
-            pos_x = 0;
-        }
-    }
-}
 
 void TermBuffer::resize(int new_width, int new_height, int font_width, int font_height) {
 
@@ -54,11 +35,28 @@ void TermBuffer::reset() {
     pos_y = 0;
 }
 
-void TermBuffer::set_cursor(int row, int col) {
-    pos_x = col;
-    pos_y = row;
-    std::cout << "set cursor\n";
+void TermBuffer::set_cursor_position(int row, int col) {
+    pos_x = std::max(0, std::min(col - 1, width_cells_ - 1));
+    if (row - 1 >= buffer_.size()) {
+        expand_down(row - buffer_.size());
+    }
+    pos_y = std::max(0, row - 1);
 }
+
+void TermBuffer::move_cursor_pos_relative(int row, int col) {
+    pos_x += col;
+    if (pos_x >= width_cells_) {
+        cursor_down();
+    }
+
+    if (pos_y + row < 0) {
+        return;
+    } else if (pos_y + row >= buffer_.size()) {
+        expand_down(pos_y + row - buffer_.size());
+    }
+    pos_y += row;
+}
+
 void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
     if (x_dir) {
         pos_x = 0;
@@ -68,22 +66,14 @@ void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
     }
 }
 
-void TermBuffer::push_cells(std::vector<Cell> cells) {
-    cursor_down();
-    pos_x = 0; // Reset x
-    for (auto &&cell : cells) {
-        buffer_[pos_y][pos_x] = std::move(cell);
-        
-        pos_x += 1;
-        if (pos_x >= width_cells_) {
-            cursor_down();
-            pos_x = 0;
-        }
-    }
-}
-
 void TermBuffer::add_cells(std::vector<Cell> cells) {
     for (auto &&cell : cells) {
+        if (cell.codepoint == 0x0A) { // If newline
+            cursor_down();
+            reset_cursor(true, false);
+            continue;
+        }
+
         buffer_[pos_y][pos_x] = std::move(cell);
         
         pos_x += 1;
@@ -93,35 +83,16 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
         }
     }
 }
-void TermBuffer::add_str(std::string str) {
-    std::vector<uint32_t> codepoints;
-    utf8::utf8to32(str.cbegin(), str.cend(), std::back_inserter(codepoints));
 
-    for (auto codepoint : codepoints) {
-        Cell cell;
-        cell.codepoint = codepoint;
-        
-        buffer_[pos_y][pos_x] = cell;
-
-        ++pos_x;
-        if (pos_x >= width_cells_) {
-            cursor_down();
-            pos_x = 0;
-        }
-    }
-}
-void TermBuffer::add_str_command(const char* sym) {
-    command_.append(sym, SDL_strlen(sym));
-    add_str(sym);
-}
-
-void TermBuffer::clear_command() {
-    command_.clear();
-    command_ = "";
-}
 
 void TermBuffer::cursor_down() {
     if (++pos_y == buffer_.size()) {
+        buffer_.emplace_back(width_cells_);
+    }
+}
+
+void TermBuffer::expand_down(int n) {
+    for (auto i = 0; i < n; i++) {
         buffer_.emplace_back(width_cells_);
     }
 }
