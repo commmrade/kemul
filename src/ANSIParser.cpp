@@ -41,6 +41,11 @@ void AnsiParser::parse(const std::string& text) {
                 } else if (codepoint == 0x0D) { // Carriage Return ('\r', codepoint 13)
                     application.on_reset_cursor(true, false);
                     continue;  // Переходим к следующему символу
+                } else if (codepoint == 0x09) {
+                    Cell tabul = current_cell;
+                    tabul.codepoint = 0x32;
+                    std::vector<Cell> tabs{tabul, tabul, tabul, tabul};
+                    // application.on_add_cells(std::move(tabs));
                 } else {
                 // Create a cell with current attribs and add it to the buffer
                 Cell cell = current_cell;

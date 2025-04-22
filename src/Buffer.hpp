@@ -96,6 +96,8 @@ public:
     void cursor_down();
     void expand_down(int n = 1);
 
+    void erase_last_symbol();
+
     const std::vector<std::vector<Cell>>& get_buffer() const {
         return buffer_;
     }

@@ -146,7 +146,13 @@ void Application::on_quit_event() {
     is_running_ = false;
 }
 void Application::on_keydown_event(SDL_Keycode key) {
-    
+    if (key == SDLK_BACKSPACE) {
+        const char backspace = 0x7F;
+        write(master_fd_, &backspace, 1);
+        // Erase from buffer
+        buffer_->erase_last_symbol();
+        window_->set_should_render(true);
+    }
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
     std::cout << scroll_dir << std::endl;

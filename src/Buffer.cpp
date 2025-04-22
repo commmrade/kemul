@@ -96,3 +96,11 @@ void TermBuffer::expand_down(int n) {
         buffer_.emplace_back(width_cells_);
     }
 }
+
+void TermBuffer::erase_last_symbol() { // TODO CORNER CASES
+    if (buffer_[pos_y][pos_x - 1].codepoint != '$') {
+        buffer_[pos_y][pos_x].codepoint = ' ';
+        pos_x--;
+    }
+    
+}
