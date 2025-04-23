@@ -61,7 +61,7 @@ void Application::setup_pty(bool echo) {
     char slave_name[128];
     int slave_id = forkpty(&master_fd_, slave_name, NULL, NULL);
     slave_fd_ = open(slave_name, O_RDONLY);
-    set_echo_mode(echo);
+    set_echo_mode(true);
 
     if (slave_id < 0) {
         throw std::runtime_error("Could not fork properly");
@@ -78,9 +78,9 @@ void Application::set_echo_mode(bool enabled) {
     termios term_attribs;
     tcgetattr(slave_fd_, &term_attribs);
     if (enabled) {
-        term_attribs.c_lflag |= (ECHO | ICANON);
+        term_attribs.c_lflag |= ECHO;
     } else {
-        term_attribs.c_lflag &= ~(ECHO | ICANON);
+        term_attribs.c_lflag &= ~ECHO;
     }
     tcsetattr(slave_fd_, TCSANOW, &term_attribs);
 }
@@ -135,7 +135,7 @@ void Application::loop() {
 
 void Application::on_textinput_event(const char* sym) {
     write(master_fd_, sym, SDL_strlen(sym));
-    parser_->parse_input(sym);
+    // parser_->parse_input(sym);
     window_->set_should_render(true);
 }
 void Application::on_enter_pressed_event() {
@@ -145,14 +145,14 @@ void Application::on_enter_pressed_event() {
 void Application::on_quit_event() {
     is_running_ = false;
 }
-void Application::on_keydown_event(SDL_Keycode key) {
-    if (key == SDLK_BACKSPACE) {
-        const char backspace = 0x7F;
-        write(master_fd_, &backspace, 1);
-        // Erase from buffer
-        buffer_->erase_last_symbol();
-        window_->set_should_render(true);
-    }
+void Application::on_backspace_pressed_event() {
+    const char backspace = 0x7F;
+    write(master_fd_, &backspace, 1);
+    std::cout << "done\n";
+}
+void Application::on_erase_event() {
+    buffer_->erase_last_symbol();
+    window_->set_should_render(true);
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
     std::cout << scroll_dir << std::endl;

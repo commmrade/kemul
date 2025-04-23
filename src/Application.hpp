@@ -44,9 +44,11 @@ public:
     void on_quit_event();
     void on_textinput_event(const char* sym);
     void on_enter_pressed_event();
-    void on_keydown_event(SDL_Keycode key);
+    void on_erase_event();
     void on_scroll_event(Sint32 scroll_dir);
     void on_paste_event(std::string content);
+
+    void on_backspace_pressed_event();
 
     void on_add_cells(std::vector<Cell> cells);
     void on_set_cursor(int row, int col);

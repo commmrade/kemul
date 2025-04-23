@@ -45,12 +45,16 @@ void AnsiParser::parse(const std::string& text) {
                     Cell tabul = current_cell;
                     tabul.codepoint = 0x32;
                     std::vector<Cell> tabs{tabul, tabul, tabul, tabul};
-                    // application.on_add_cells(std::move(tabs));
+                    application.on_add_cells(std::move(tabs)); // Inserting four spaces
+                } else if (codepoint == '\b') { // Appears after you send DEL codepoint to the shell so it deletes it.
+                    application.on_erase_event();
+                } else if (codepoint == 0x07) { // TODO: Play bell sound
+                    std::cout << "bell sound\n";
                 } else {
-                // Create a cell with current attribs and add it to the buffer
-                Cell cell = current_cell;
-                cell.codepoint = codepoint;
-                application.on_add_cells({cell});
+                    // Create a cell with current attribs and add it to the buffer
+                    Cell cell = current_cell;
+                    cell.codepoint = codepoint;
+                    application.on_add_cells({cell});
                 }
             } catch (utf8::invalid_utf8&) {
                 ++it;

@@ -76,7 +76,6 @@ private:
     int font_height_;
 
 
-
 public:
     explicit TermBuffer(int width, int height, int font_width, int font_height);
     ~TermBuffer();

@@ -21,8 +21,11 @@ void EventHandler::handle_event(SDL_Event& event) {
                 delete clipboard_text;
             } else if (event.key.keysym.sym == SDLK_l && (event.key.keysym.mod & KMOD_CTRL)) {
                 application.on_clear_requested();
+            } else if (event.key.keysym.sym == SDLK_BACKSPACE) {
+                application.on_backspace_pressed_event();
             } else {
-                application.on_keydown_event(event.key.keysym.sym);
+                
+                // application.on_keydown_event(event.key.keysym.sym);
             }
             break;
         }
