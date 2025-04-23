@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2/SDL_keycode.h>
+#include <SDL_keyboard.h>
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -40,31 +41,28 @@ public:
     void run();
 
 
-    // Events
-    void on_quit_event();
+    // Keypress events
     void on_textinput_event(const char* sym);
+    void on_backspace_pressed_event();
     void on_enter_pressed_event();
-    void on_erase_event();
     void on_scroll_event(Sint32 scroll_dir);
     void on_paste_event(std::string content);
+    void on_arrowkey_pressed(SDL_Keycode sym);
 
-    void on_backspace_pressed_event();
-
+    // Parser events and other
+    void on_erase_event();
+    void on_quit_event();
     void on_add_cells(std::vector<Cell> cells);
     void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);
-
     void on_reset_cursor(bool x_dir, bool y_dir);
     void on_clear_requested();
     void on_change_window_title(const std::string& win_title);
-
-
-    // Parser events
 private:
     void init_sdl();
     void init_ttf();
 
-    void setup_pty(bool echo);
+    void setup_pty(bool echo, int cols);
 
     void loop();
 };

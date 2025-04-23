@@ -39,14 +39,15 @@ void AnsiParser::parse(const std::string& text) {
                 if (codepoint == 0x1B) { // ESC character
                     state = GeneralState::ESCAPE;
                 } else if (codepoint == 0x0D) { // Carriage Return ('\r', codepoint 13)
+                    std::cout << "damn\n";
                     application.on_reset_cursor(true, false);
                     continue;  // Переходим к следующему символу
                 } else if (codepoint == 0x09) {
                     Cell tabul = current_cell;
-                    tabul.codepoint = 0x32;
+                    tabul.codepoint = ' ';
                     std::vector<Cell> tabs{tabul, tabul, tabul, tabul};
                     application.on_add_cells(std::move(tabs)); // Inserting four spaces
-                } else if (codepoint == '\b') { // Appears after you send DEL codepoint to the shell so it deletes it.
+                } else if (codepoint == 0x08) { // Appears after you send DEL codepoint to the shell so it deletes it.
                     application.on_erase_event();
                 } else if (codepoint == 0x07) { // TODO: Play bell sound
                     std::cout << "bell sound\n";
@@ -71,6 +72,7 @@ void AnsiParser::parse(const std::string& text) {
                     }
                     if (it != text.end()) {
                         char command = *it++;
+                        // std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
                         handleCSI(command, parseParams(csi_sequence));
                     }
                     state = GeneralState::TEXT;
@@ -136,7 +138,7 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
         {0, 255, 255, 255},   // Cyan
         {255, 255, 255, 255}  // White
     }; // Perhaps add more colors
-
+    // std::cout << command << std::endl;
     if (command == 'm') { // Select Graphic Rendition (SGR)
         for (int param : params) {
             if (param == 0) { // Reset
@@ -164,20 +166,26 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'H') { // Cursor position
         int row = params.size() >= 1 ? params[0] : 1;
         int col = params.size() >= 2 ? params[1] : 1;
+        std::cout << "damn\n";
         application.on_set_cursor(row, col);
     } else if (command == 'J' && params.size() >= 1 && params[0] == 2) {
         application.on_clear_requested(); // Clear screen
     } else if (command == 'A') { // Cursor up
+        std::cout << "up\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        application.on_move_cursor(-n, 0);
+        // application.on_move_cursor(-n, 0);
     } else if (command == 'B') { // Cursor down
+        std::cout << "down\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        application.on_move_cursor(n, 0);
+        // application.on_move_cursor(n, 0);
     } else if (command == 'C') { // Cursor forward
+        std::cout << "forward\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        application.on_move_cursor(0, n);
+        application.on_move_cursor(0, 1);
     } else if (command == 'D') { // Cursor backward
+        std::cout << "backward\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        application.on_move_cursor(0, -n);
+        application.on_move_cursor(0, -1);
     }
+    // std::cout << command << std::endl;
 }

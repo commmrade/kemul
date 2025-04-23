@@ -23,8 +23,9 @@ void EventHandler::handle_event(SDL_Event& event) {
                 application.on_clear_requested();
             } else if (event.key.keysym.sym == SDLK_BACKSPACE) {
                 application.on_backspace_pressed_event();
+            } else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
+                application.on_arrowkey_pressed(event.key.keysym.sym);
             } else {
-                
                 // application.on_keydown_event(event.key.keysym.sym);
             }
             break;

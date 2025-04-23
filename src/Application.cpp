@@ -3,6 +3,7 @@
 #include "EventHandler.hpp"
 #include "Window.hpp"
 #include <algorithm>
+#include <cstring>
 #include <fcntl.h>
 #include <memory>
 #include <pty.h>
@@ -20,21 +21,26 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 #include <iostream>
 #include "ANSIParser.hpp"
 
 Application::Application(const std::string &font_path, int width, int height) {
-    setup_pty(false);
+    
 
     init_sdl();
     init_ttf();
-    set_blocking_mode(false);
+    
 
     window_ = std::make_unique<Window>(font_path);
 
     auto font_size = window_->get_font_size();
+
+    setup_pty(false, width / font_size.first);
+    set_blocking_mode(false);
+
     buffer_ = std::make_unique<TermBuffer>(width, height, font_size.first, font_size.second);
     event_handler_ = std::make_unique<EventHandler>(*this);
     parser_ = std::make_unique<AnsiParser>(*this);
@@ -56,13 +62,21 @@ void Application::init_ttf() {
     }
 }
 
-void Application::setup_pty(bool echo) {
+#include <iostream>
+#include <stdexcept>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+#include <pty.h>
+#include <poll.h>
+
+void Application::setup_pty(bool echo, int cols) {
 
     char slave_name[128];
-    int slave_id = forkpty(&master_fd_, slave_name, NULL, NULL);
-    slave_fd_ = open(slave_name, O_RDONLY);
-    set_echo_mode(true);
-
+    struct winsize ws;
+    ws.ws_col = cols;
+    int slave_id = forkpty(&master_fd_, slave_name, NULL, &ws);
+    
     if (slave_id < 0) {
         throw std::runtime_error("Could not fork properly");
     } else if (slave_id == 0) {
@@ -70,20 +84,36 @@ void Application::setup_pty(bool echo) {
         throw std::runtime_error("Execl didn't work");
     }
 
+    slave_fd_ = open(slave_name, O_RDONLY);
+    if (slave_fd_ < 0) {
+        throw std::runtime_error("Failed to open slave pty");
+    }
+   
+    termios term_attribs;
+    if (tcgetattr(slave_fd_, &term_attribs) != 0) {
+        throw std::runtime_error("Failed to get terminal attributes");
+    }
+    term_attribs.c_lflag |= IUTF8;
+
+    if (tcsetattr(slave_fd_, TCSANOW, &term_attribs) != 0) {
+        throw std::runtime_error("Failed to set terminal attributes");
+    }
+    
     fds_[0].fd = master_fd_;
     fds_[0].events |= POLLIN;
 }
 
-void Application::set_echo_mode(bool enabled) {
-    termios term_attribs;
-    tcgetattr(slave_fd_, &term_attribs);
-    if (enabled) {
-        term_attribs.c_lflag |= ECHO;
-    } else {
-        term_attribs.c_lflag &= ~ECHO;
-    }
-    tcsetattr(slave_fd_, TCSANOW, &term_attribs);
-}
+// void Application::set_echo_mode(bool enabled) {
+//     termios term_attribs;
+//     tcgetattr(slave_fd_, &term_attribs);
+//     cfmakeraw(&term_attribs); // This sets raw mode
+//     if (enabled) {
+//         term_attribs.c_lflag |= (ECHO);
+//     } else {
+//         term_attribs.c_lflag &= ~(ECHO | ICANON);
+//     }
+//     tcsetattr(slave_fd_, TCSANOW, &term_attribs);
+// }
 void Application::set_blocking_mode(bool enabled) {
     int flags = fcntl(master_fd_, F_GETFL);
     if (!enabled) {
@@ -142,13 +172,34 @@ void Application::on_enter_pressed_event() {
     write(master_fd_, "\n", 1);
     window_->set_should_render(true);
 }
+
+void Application::on_arrowkey_pressed(SDL_Keycode sym) {
+    switch (sym) {
+        case SDLK_UP: {
+            write(master_fd_, "\033[A", 3);
+            break;
+        }
+        case SDLK_DOWN: {
+            write(master_fd_, "\033[B", 3);
+            break;
+        }
+        case SDLK_RIGHT: {
+            write(master_fd_, "\033[C", 3);
+            break;
+        }
+        case SDLK_LEFT: {
+            write(master_fd_, "\033[D", 3);
+            break;
+        }
+    }    
+}
+
 void Application::on_quit_event() {
     is_running_ = false;
 }
 void Application::on_backspace_pressed_event() {
-    const char backspace = 0x7F;
+    const char backspace = 0x08;
     write(master_fd_, &backspace, 1);
-    std::cout << "done\n";
 }
 void Application::on_erase_event() {
     buffer_->erase_last_symbol();

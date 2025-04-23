@@ -77,7 +77,9 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
         buffer_[pos_y][pos_x] = std::move(cell);
         
         pos_x += 1;
+        std::cout << pos_x << " " << pos_y << " " << width_cells_ << std::endl;
         if (pos_x >= width_cells_) {
+            std::cout << "down\n";
             cursor_down();
             pos_x = 0;
         }
@@ -86,6 +88,7 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
 
 
 void TermBuffer::cursor_down() {
+    std::cout << "down\n";
     if (++pos_y == buffer_.size()) {
         buffer_.emplace_back(width_cells_);
     }
