@@ -39,9 +39,6 @@ void AnsiParser::parse(const std::string& text) {
                 if (codepoint == 0x1B) { // ESC character
                     state = GeneralState::ESCAPE;
                 } else if (codepoint == 0x0D) { // Carriage Return ('\r', codepoint 13)
-                    std::cout << "damn\n";
-                    application.on_reset_cursor(true, false);
-                    continue;  // Переходим к следующему символу
                 } else if (codepoint == 0x09) {
                     Cell tabul = current_cell;
                     tabul.codepoint = ' ';
@@ -50,7 +47,6 @@ void AnsiParser::parse(const std::string& text) {
                 } else if (codepoint == 0x08) { // Appears after you send DEL codepoint to the shell so it deletes it.
                     application.on_erase_event();
                 } else if (codepoint == 0x07) { // TODO: Play bell sound
-                    std::cout << "bell sound\n";
                 } else {
                     // Create a cell with current attribs and add it to the buffer
                     Cell cell = current_cell;
@@ -166,26 +162,29 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'H') { // Cursor position
         int row = params.size() >= 1 ? params[0] : 1;
         int col = params.size() >= 2 ? params[1] : 1;
-        std::cout << "damn\n";
+        // std::cout << "damn\n";
         application.on_set_cursor(row, col);
     } else if (command == 'J' && params.size() >= 1 && params[0] == 2) {
         application.on_clear_requested(); // Clear screen
     } else if (command == 'A') { // Cursor up
-        std::cout << "up\n";
+        // std::cout << "up\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.on_move_cursor(-n, 0);
+        application.on_move_cursor(-n, 0);
     } else if (command == 'B') { // Cursor down
-        std::cout << "down\n";
+        // std::cout << "down\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        // application.on_move_cursor(n, 0);
+        application.on_move_cursor(n, 0);
     } else if (command == 'C') { // Cursor forward
-        std::cout << "forward\n";
+        // std::cout << "forward\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(0, 1);
     } else if (command == 'D') { // Cursor backward
         std::cout << "backward\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(0, -1);
+    } else if (command == 'K') {
+        int mode = params.empty() ? 0 : params[0];
+        application.on_erase_in_line(mode);
     }
     // std::cout << command << std::endl;
 }

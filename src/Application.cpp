@@ -26,19 +26,17 @@
 #include "ANSIParser.hpp"
 
 Application::Application(const std::string &font_path, int width, int height) {
-    
-
     init_sdl();
     init_ttf();
     
-
-    window_ = std::make_unique<Window>(font_path);
-
+    window_ = std::make_unique<Window>(font_path); // Setting up window before so we can get font size
     auto font_size = window_->get_font_size();
 
-    setup_pty(false, width / font_size.first);
+    // Setting up terminal stuff
+    setup_pty(false, width / font_size.first - 1);
     set_blocking_mode(false);
 
+    // Init other stuff
     buffer_ = std::make_unique<TermBuffer>(width, height, font_size.first, font_size.second);
     event_handler_ = std::make_unique<EventHandler>(*this);
     parser_ = std::make_unique<AnsiParser>(*this);
@@ -65,7 +63,7 @@ void Application::setup_pty(bool echo, int cols) {
     char slave_name[128];
     struct winsize ws;
     ws.ws_col = cols;
-    int slave_id = forkpty(&master_fd_, slave_name, NULL, &ws);
+    int slave_id = forkpty(&master_fd_, slave_name, NULL, NULL);
     
     if (slave_id < 0) {
         throw std::runtime_error("Could not fork properly");
@@ -84,6 +82,7 @@ void Application::setup_pty(bool echo, int cols) {
         throw std::runtime_error("Failed to get terminal attributes");
     }
     term_attribs.c_lflag |= IUTF8;
+    term_attribs.c_lflag &= ~ICANON;
 
     if (tcsetattr(slave_fd_, TCSANOW, &term_attribs) != 0) {
         throw std::runtime_error("Failed to set terminal attributes");
@@ -93,17 +92,6 @@ void Application::setup_pty(bool echo, int cols) {
     fds_[0].events |= POLLIN;
 }
 
-// void Application::set_echo_mode(bool enabled) {
-//     termios term_attribs;
-//     tcgetattr(slave_fd_, &term_attribs);
-//     cfmakeraw(&term_attribs); // This sets raw mode
-//     if (enabled) {
-//         term_attribs.c_lflag |= (ECHO);
-//     } else {
-//         term_attribs.c_lflag &= ~(ECHO | ICANON);
-//     }
-//     tcsetattr(slave_fd_, TCSANOW, &term_attribs);
-// }
 void Application::set_blocking_mode(bool enabled) {
     int flags = fcntl(master_fd_, F_GETFL);
     if (!enabled) {
@@ -143,7 +131,7 @@ void Application::loop() {
                 output.append(buf, rd_size);
             }
             parser_->parse(output);
-            
+            std::cout << output << std::endl;
 
             window_->set_should_render(true);
         }
@@ -188,10 +176,11 @@ void Application::on_quit_event() {
     is_running_ = false;
 }
 void Application::on_backspace_pressed_event() {
-    const char backspace = 0x08;
+    const char backspace = 0x7F;
     write(master_fd_, &backspace, 1);
 }
 void Application::on_erase_event() {
+    // std::cout << "eras\n";
     buffer_->erase_last_symbol();
     window_->set_should_render(true);
 }
@@ -228,4 +217,7 @@ void Application::on_clear_requested() {
 
 void Application::on_change_window_title(const std::string& win_title) {
     window_->set_window_title(win_title);
+}
+void Application::on_erase_in_line(int mode) {
+    buffer_->erase_in_line(mode);
 }

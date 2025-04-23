@@ -42,19 +42,32 @@ void TermBuffer::set_cursor_position(int row, int col) {
     }
     pos_y = std::max(0, row - 1);
 }
-
 void TermBuffer::move_cursor_pos_relative(int row, int col) {
     pos_x += col;
-    if (pos_x >= width_cells_) {
+
+    while (pos_x < 0) {
+        if (pos_y == 0) {
+            pos_x = 0;
+            break;
+        }
+        pos_y--;
+        pos_x += width_cells_;
+    }
+
+    while (pos_x >= width_cells_) {
+        pos_x -= width_cells_;
         cursor_down();
     }
 
-    if (pos_y + row < 0) {
-        return;
-    } else if (pos_y + row >= buffer_.size()) {
-        expand_down(pos_y + row - buffer_.size());
+    int new_row = pos_y + row;
+    if (new_row < 0) {
+        pos_y = 0;
+    } else if (new_row >= buffer_.size()) {
+        expand_down(new_row - buffer_.size() + 1);
+        pos_y = new_row;
+    } else {
+        pos_y = new_row;
     }
-    pos_y += row;
 }
 
 void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
@@ -69,6 +82,7 @@ void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
 void TermBuffer::add_cells(std::vector<Cell> cells) {
     for (auto &&cell : cells) {
         if (cell.codepoint == 0x0A) { // If newline
+            std::cout << "add cells down\n";
             cursor_down();
             reset_cursor(true, false);
             continue;
@@ -77,7 +91,7 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
         buffer_[pos_y][pos_x] = std::move(cell);
         
         pos_x += 1;
-        std::cout << pos_x << " " << pos_y << " " << width_cells_ << std::endl;
+        // std::cout << pos_x << " " << pos_y << " " << width_cells_ << std::endl;
         if (pos_x >= width_cells_) {
             std::cout << "down\n";
             cursor_down();
@@ -88,7 +102,6 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
 
 
 void TermBuffer::cursor_down() {
-    std::cout << "down\n";
     if (++pos_y == buffer_.size()) {
         buffer_.emplace_back(width_cells_);
     }
@@ -100,12 +113,43 @@ void TermBuffer::expand_down(int n) {
     }
 }
 
-void TermBuffer::erase_last_symbol() { // TODO CORNER CASES
-    buffer_[pos_y][pos_x].codepoint = ' ';
-    pos_x--;
+void TermBuffer::erase_in_line(int mode) {
+    if (pos_y >= buffer_.size()) return;
 
-    if (pos_x < 0) {
-        pos_y--;
-        pos_x = width_cells_ - 1;
+    int start = 0;
+    int end = width_cells_;
+
+    if (mode == 0) { 
+        start = pos_x;
+    } else if (mode == 1) { 
+        end = pos_x + 1;
+    } else if (mode == 2) { 
+        start = 0;
+        end = width_cells_;
     }
+
+    for (int x = start; x < end; ++x) {
+        buffer_[pos_y][x].codepoint = ' '; // reset cell (codepoint=0)
+    }
+}
+
+void TermBuffer::erase_last_symbol() {
+    if (pos_x == 0 && pos_y == 0) return; 
+
+    if (pos_x > 0) {
+        pos_x--;
+    } else {
+        if (pos_y > 0) {
+            pos_y--;
+            pos_x = width_cells_ - 1;
+        } else {
+            pos_x = 0;
+        }
+    }
+
+    if (pos_y < buffer_.size() && pos_x < buffer_[pos_y].size()) {
+        buffer_[pos_y][pos_x].codepoint = ' '; // полностью очищаем
+    }
+
+    std::cout << pos_y << std::endl;
 }

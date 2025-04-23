@@ -35,11 +35,9 @@ public:
     ~Application();
 
 
-    void set_echo_mode(bool enabled);
     void set_blocking_mode(bool enabled);
 
     void run();
-
 
     // Keypress events
     void on_textinput_event(const char* sym);
@@ -56,13 +54,12 @@ public:
     void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);
     void on_reset_cursor(bool x_dir, bool y_dir);
+    void on_erase_in_line(int mode);
     void on_clear_requested();
     void on_change_window_title(const std::string& win_title);
 private:
     void init_sdl();
     void init_ttf();
-
     void setup_pty(bool echo, int cols);
-
     void loop();
 };
