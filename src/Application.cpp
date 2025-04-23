@@ -2,12 +2,10 @@
 #include "Buffer.hpp"
 #include "EventHandler.hpp"
 #include "Window.hpp"
-#include <algorithm>
 #include <cstring>
 #include <fcntl.h>
 #include <memory>
 #include <pty.h>
-#include <sstream>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
@@ -61,14 +59,6 @@ void Application::init_ttf() {
         throw std::runtime_error(TTF_GetError());
     }
 }
-
-#include <iostream>
-#include <stdexcept>
-#include <fcntl.h>
-#include <unistd.h>
-#include <termios.h>
-#include <pty.h>
-#include <poll.h>
 
 void Application::setup_pty(bool echo, int cols) {
 
