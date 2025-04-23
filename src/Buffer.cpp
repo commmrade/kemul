@@ -11,7 +11,7 @@
 
 
 TermBuffer::TermBuffer(int width, int height, int font_width, int font_height) : font_width_(font_width), font_height_(font_height) {
-    width_cells_ = width / font_width - 1;
+    width_cells_ = width / font_width - 1; 
     height_cells_ = height / font_height;
     buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
 }
@@ -114,42 +114,31 @@ void TermBuffer::expand_down(int n) {
 }
 
 void TermBuffer::erase_in_line(int mode) {
-    if (pos_y >= buffer_.size()) return;
+    // if (pos_y >= buffer_.size()) return;
 
-    int start = 0;
-    int end = width_cells_;
+    // int start = 0;
+    // int end = width_cells_;
 
-    if (mode == 0) { 
-        start = pos_x;
-    } else if (mode == 1) { 
-        end = pos_x + 1;
-    } else if (mode == 2) { 
-        start = 0;
-        end = width_cells_;
-    }
+    // if (mode == 0) { // от курсора до конца строки
+    //     start = pos_x;
+    // } else if (mode == 1) { // от начала до курсора (включительно)
+    //     end = pos_x + 1;
+    // } else if (mode == 2) { // вся строка
+    //     start = 0;
+    //     end = width_cells_;
+    // }
 
-    for (int x = start; x < end; ++x) {
-        buffer_[pos_y][x].codepoint = ' '; // reset cell (codepoint=0)
-    }
+    // for (int x = start; x < end; ++x) {
+    //     buffer_[pos_y][x] = Cell{}; // reset cell (codepoint=0)
+    // }
 }
 
-void TermBuffer::erase_last_symbol() {
-    if (pos_x == 0 && pos_y == 0) return; 
-
-    if (pos_x > 0) {
-        pos_x--;
-    } else {
-        if (pos_y > 0) {
-            pos_y--;
-            pos_x = width_cells_ - 1;
-        } else {
-            pos_x = 0;
-        }
+void TermBuffer::erase_last_symbol() { 
+    buffer_[pos_y][pos_x].codepoint = ' ';
+    pos_x--;
+    std::cout << pos_x << "cuck" << std::endl;
+    if (pos_x < 0) {
+        pos_y--;
+        pos_x = width_cells_ - 1;
     }
-
-    if (pos_y < buffer_.size() && pos_x < buffer_[pos_y].size()) {
-        buffer_[pos_y][pos_x].codepoint = ' '; // полностью очищаем
-    }
-
-    std::cout << pos_y << std::endl;
 }
