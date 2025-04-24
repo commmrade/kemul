@@ -47,7 +47,8 @@ void AnsiParser::parse(const std::string& text) {
                     std::vector<Cell> tabs{tabul, tabul, tabul, tabul};
                     application.on_add_cells(std::move(tabs)); // Inserting four spaces
                 } else if (codepoint == 0x08) { // Appears after you send DEL codepoint to the shell so it deletes it.
-                    application.on_erase_event();
+                    // application.on_erase_event();
+                    application.on_move_cursor(0, -1);
                 } else if (codepoint == 0x07) { // TODO: Play bell sound
 
                 } else {
@@ -148,6 +149,14 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
                 current_cell.set_bold();
             } else if (param == 22) {
                 current_cell.set_bold(false);
+            } else if (param == 7) {
+                auto temp_color = current_cell.fg_color;
+                current_cell.fg_color = current_cell.bg_color;
+                current_cell.bg_color = temp_color;
+            } else if (param == 27) {
+                auto temp_color = current_cell.fg_color;
+                current_cell.fg_color = current_cell.bg_color;
+                current_cell.bg_color = temp_color;
             } else if (param == 4) {
                 current_cell.set_underline();
             } else if (param == 24) {
@@ -185,7 +194,7 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'D') { // Cursor backward
         std::cout << "backward\n";
         int n = params.size() >= 1 ? params[0] : 1;
-        application.on_move_cursor(0, n);
+        application.on_move_cursor(0, -n);
     } else if (command == 'K') {
         int mode = params.empty() ? 0 : params[0];
         application.on_erase_in_line(mode);

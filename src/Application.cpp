@@ -132,10 +132,7 @@ void Application::loop() {
             while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
                 output.append(buf, rd_size);
             }
-            
             parser_->parse(output);
-            // std::cout << output << std::endl;
-
             window_->set_should_render(true);
         }
 
@@ -205,6 +202,11 @@ void Application::on_ctrl_d_pressed() {
 void Application::on_ctrl_l_pressed() { // Clearing screen
     const char clear = 0x0C;
     write(master_fd_, &clear, 1);
+}
+
+void Application::on_ctrl_r_pressed() {
+    const char rev_find = 0x12;
+    write(master_fd_, &rev_find, 1);
 }
 
 void Application::on_erase_event() {

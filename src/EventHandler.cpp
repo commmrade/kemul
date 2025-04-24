@@ -33,7 +33,9 @@ void EventHandler::handle_event(SDL_Event& event) {
                 application.on_ctrl_z_pressed();
             } else if (event.key.keysym.sym == SDLK_d && event.key.keysym.mod & KMOD_CTRL) {
                 application.on_ctrl_d_pressed();
-            }
+            } else if (event.key.keysym.sym == SDLK_r && event.key.keysym.mod & KMOD_CTRL) {
+                application.on_ctrl_r_pressed();
+            } 
             break;
         }
         case SDL_MOUSEWHEEL: {

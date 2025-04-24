@@ -51,6 +51,7 @@ public:
     void on_ctrl_z_pressed();
     void on_ctrl_d_pressed();
     void on_ctrl_l_pressed();
+    void on_ctrl_r_pressed();
 
 
     // Parser events and other
