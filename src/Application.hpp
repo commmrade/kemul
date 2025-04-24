@@ -46,6 +46,12 @@ public:
     void on_scroll_event(Sint32 scroll_dir);
     void on_paste_event(std::string content);
     void on_arrowkey_pressed(SDL_Keycode sym);
+    void on_ctrl_h_pressed();
+    void on_ctrl_c_pressed();
+    void on_ctrl_z_pressed();
+    void on_ctrl_d_pressed();
+    void on_ctrl_l_pressed();
+
 
     // Parser events and other
     void on_erase_event();
@@ -55,7 +61,7 @@ public:
     void on_move_cursor(int row, int col);
     void on_reset_cursor(bool x_dir, bool y_dir);
     void on_erase_in_line(int mode);
-    void on_clear_requested();
+    void on_clear_requested(bool remove);
     void on_change_window_title(const std::string& win_title);
 private:
     void init_sdl();

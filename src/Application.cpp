@@ -63,7 +63,8 @@ void Application::setup_pty(bool echo, int cols) {
     char slave_name[128];
     struct winsize ws;
     ws.ws_col = cols;
-    int slave_id = forkpty(&master_fd_, slave_name, NULL, NULL);
+    // ws.ws_row = 100;
+    int slave_id = forkpty(&master_fd_, slave_name, NULL, &ws);
     
     if (slave_id < 0) {
         throw std::runtime_error("Could not fork properly");
@@ -82,7 +83,8 @@ void Application::setup_pty(bool echo, int cols) {
         throw std::runtime_error("Failed to get terminal attributes");
     }
     term_attribs.c_lflag |= IUTF8;
-    term_attribs.c_lflag &= ~ICANON;
+    // term_attribs.c_lflag &= ~ICANON;
+    // term_attribs.c_oflag &= ~ONLCR;
 
     if (tcsetattr(slave_fd_, TCSANOW, &term_attribs) != 0) {
         throw std::runtime_error("Failed to set terminal attributes");
@@ -130,8 +132,9 @@ void Application::loop() {
             while ((rd_size = read(master_fd_, buf, sizeof(buf))) > 0) {
                 output.append(buf, rd_size);
             }
+            
             parser_->parse(output);
-            std::cout << output << std::endl;
+            // std::cout << output << std::endl;
 
             window_->set_should_render(true);
         }
@@ -143,12 +146,22 @@ void Application::loop() {
 
 void Application::on_textinput_event(const char* sym) {
     write(master_fd_, sym, SDL_strlen(sym));
-    // parser_->parse_input(sym);
+    // std::cout << sym << std::endl;;
     window_->set_should_render(true);
 }
 void Application::on_enter_pressed_event() {
     write(master_fd_, "\n", 1);
     window_->set_should_render(true);
+}
+
+void Application::on_ctrl_z_pressed() {
+    const char sigsusp = 0x1A;
+    write(master_fd_, &sigsusp, 1);
+}
+
+void Application::on_ctrl_c_pressed() {
+    const char sigint = 0x03;
+    write(master_fd_, &sigint, 1); // SIGINT send
 }
 
 void Application::on_arrowkey_pressed(SDL_Keycode sym) {
@@ -179,13 +192,26 @@ void Application::on_backspace_pressed_event() {
     const char backspace = 0x7F;
     write(master_fd_, &backspace, 1);
 }
+void Application::on_ctrl_h_pressed() {
+    const char backspace = 0x08;
+    write(master_fd_, &backspace, 1);
+}
+
+void Application::on_ctrl_d_pressed() {
+    const char eof = 0x04;
+    write(master_fd_, &eof, 1);
+}
+
+void Application::on_ctrl_l_pressed() { // Clearing screen
+    const char clear = 0x0C;
+    write(master_fd_, &clear, 1);
+}
+
 void Application::on_erase_event() {
-    // std::cout << "eras\n";
     buffer_->erase_last_symbol();
     window_->set_should_render(true);
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
-    std::cout << scroll_dir << std::endl;
     window_->scroll(scroll_dir);
     window_->set_should_render(true);
 }
@@ -210,8 +236,16 @@ void Application::on_reset_cursor(bool x_dir, bool y_dir) {
     buffer_->reset_cursor(x_dir, y_dir);
 }
 
-void Application::on_clear_requested() {
-    buffer_->clear_all();
+void Application::on_clear_requested(bool remove) {
+    if (remove) {
+        buffer_->clear_all();
+        window_->set_scroll_offset(0);
+    } else {
+        auto [x, y] = buffer_->get_cursor_pos();
+        buffer_->set_cursor_position(buffer_->get_max_y() + 1, x);
+        window_->set_scroll_offset(buffer_->get_max_y());
+    }
+    
     window_->set_should_render(true);
 }
 

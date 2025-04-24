@@ -68,6 +68,7 @@ private:
     std::vector<std::vector<Cell>> buffer_;
     int pos_x{0};
     int pos_y{0};
+    int max_pos_y{0};
 
     int width_cells_;
     int height_cells_;
@@ -95,6 +96,7 @@ public:
     void cursor_down();
     void expand_down(int n = 1);
 
+
     void erase_last_symbol();
     void erase_in_line(int mode);
 
@@ -104,5 +106,8 @@ public:
 
     const std::pair<int, int> get_cursor_pos() const {
         return {pos_x, pos_y};
+    }
+    const int get_max_y() const {
+        return max_pos_y;
     }
 };

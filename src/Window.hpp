@@ -82,6 +82,13 @@ public:
 
     void set_window_title(const std::string& win_title);
 
+    void set_scroll_offset(int n) {
+        scroll_offset_ = n;
+    }
+    const int get_scroll_offset() const {
+        return scroll_offset_;
+    }
+
 private:
     void load_font(const std::string& font_path);
     void init();

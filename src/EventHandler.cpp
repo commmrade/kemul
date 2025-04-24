@@ -20,13 +20,19 @@ void EventHandler::handle_event(SDL_Event& event) {
                 application.on_paste_event(clipboard_text);
                 delete clipboard_text;
             } else if (event.key.keysym.sym == SDLK_l && (event.key.keysym.mod & KMOD_CTRL)) {
-                application.on_clear_requested();
+                application.on_ctrl_l_pressed();
             } else if (event.key.keysym.sym == SDLK_BACKSPACE) {
                 application.on_backspace_pressed_event();
             } else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
                 application.on_arrowkey_pressed(event.key.keysym.sym);
-            } else {
-                // application.on_keydown_event(event.key.keysym.sym);
+            } else if (event.key.keysym.sym == SDLK_h && event.key.keysym.mod & KMOD_CTRL) {
+                application.on_ctrl_h_pressed();
+            } else if (event.key.keysym.sym == SDLK_c && event.key.keysym.mod & KMOD_CTRL) {
+                application.on_ctrl_c_pressed();
+            } else if (event.key.keysym.sym == SDLK_z && event.key.keysym.mod & KMOD_CTRL) {
+                application.on_ctrl_z_pressed();
+            } else if (event.key.keysym.sym == SDLK_d && event.key.keysym.mod & KMOD_CTRL) {
+                application.on_ctrl_d_pressed();
             }
             break;
         }
