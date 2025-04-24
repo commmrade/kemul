@@ -100,6 +100,9 @@ public:
     void erase_last_symbol();
     void erase_in_line(int mode);
 
+    void insert_chars(int n); // Insert n spaces henceforth shifting existing chars to the right
+    void delete_chars(int n); // Delete n chars henceforth shiting existing chars to the left
+
     const std::vector<std::vector<Cell>>& get_buffer() const {
         return buffer_;
     }

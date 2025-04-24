@@ -63,7 +63,7 @@ void Application::setup_pty(bool echo, int cols) {
     char slave_name[128];
     struct winsize ws;
     ws.ws_col = cols;
-    // ws.ws_row = 100;
+    ws.ws_row = 10;
     int slave_id = forkpty(&master_fd_, slave_name, NULL, &ws);
     
     if (slave_id < 0) {
@@ -133,6 +133,7 @@ void Application::loop() {
                 output.append(buf, rd_size);
             }
             parser_->parse(output);
+            std::cout << output << std::endl;
             window_->set_should_render(true);
         }
 
@@ -256,4 +257,11 @@ void Application::on_change_window_title(const std::string& win_title) {
 }
 void Application::on_erase_in_line(int mode) {
     buffer_->erase_in_line(mode);
+}
+
+void Application::on_insert_chars(int n) {
+    buffer_->insert_chars(n);
+}
+void Application::on_delete_chars(int n) {
+    buffer_->delete_chars(n);
 }

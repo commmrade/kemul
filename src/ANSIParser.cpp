@@ -67,7 +67,7 @@ void AnsiParser::parse(const std::string& text) {
                     state = GeneralState::CSI;
                     std::string csi_sequence;
                     // Collect CSI sequence until a letter is found
-                    while (it != text.end() && !std::isalpha(*it)) {
+                    while (it != text.end() && !std::isalpha(*it) && *it != '@') {
                         csi_sequence += *it++;
                     }
                     if (it != text.end()) {
@@ -198,6 +198,14 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'K') {
         int mode = params.empty() ? 0 : params[0];
         application.on_erase_in_line(mode);
+    } else if (command == '@') { // ANSI to insert characters and shift existing right
+        int n = params.empty() ? 0 : params[0];
+        // std::cout << "inserted" << std::endl;
+        application.on_insert_chars(n);
+    } else if (command == 'P') {
+        int n = params.empty() ? 0 : params[0];
+        std::cout << "deleted" << std::endl;
+        application.on_delete_chars(n);
     }
     // std::cout << command << std::endl;
 }

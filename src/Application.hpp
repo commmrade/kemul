@@ -64,6 +64,10 @@ public:
     void on_erase_in_line(int mode);
     void on_clear_requested(bool remove);
     void on_change_window_title(const std::string& win_title);
+
+    void on_insert_chars(int n);
+    void on_delete_chars(int n);
+
 private:
     void init_sdl();
     void init_ttf();

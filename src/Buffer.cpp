@@ -144,3 +144,30 @@ void TermBuffer::erase_last_symbol() {
         pos_x = width_cells_ - 1;
     }
 }
+
+void TermBuffer::insert_chars(int n) {
+    if (n <= 0 || pos_x >= width_cells_) return;
+
+    n = std::min(n, width_cells_ - pos_x);
+
+
+    for (auto i = width_cells_ - n - 1; i >= pos_x; --i) { // Move characters to the right from the cursor 
+        buffer_[pos_y][i + n] = buffer_[pos_y][i];
+    }
+
+    for (auto i = pos_x; i < pos_x + n; ++i) { // Fill from cursor to cursor + n with spaces
+        buffer_[pos_y][i].codepoint = ' ';
+    }
+}
+void TermBuffer::delete_chars(int n) {
+    if (n <= 0 || pos_x < 0) return;
+    
+    
+    for (auto i = pos_x; i < width_cells_ - n - 1; ++i) { // Move characters left after the cursor
+        buffer_[pos_y][i] = buffer_[pos_y][i + n];
+    }
+
+    for (auto i = width_cells_ - n - 1; i < width_cells_; ++i) { // FIll moved characters in the end with spaces
+        buffer_[pos_y][i].codepoint = ' ';
+    }
+}
