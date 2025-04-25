@@ -1,7 +1,6 @@
 #include <fcntl.h>
 #include <memory>
 #include <pty.h>
-#include <ranges>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
@@ -23,9 +22,7 @@
 #include <iostream>
 #include <utf8cpp/utf8.h>
 #include <utf8cpp/utf8/cpp11.h>
-#include <algorithm>
 #include "Color.hpp"
-
 
 
 Window::Window(const std::string& font_path, int width, int height) : width_(width), height_(height) {

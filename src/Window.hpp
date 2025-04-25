@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <memory>
-#include <string_view>
 #include <sys/types.h>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>

@@ -9,17 +9,11 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 // #include <SDL_blendmode.h>
-#include <cstddef>
-#include <cstdint>
-#include <iostream>
 #include <SDL2/SDL.h>
-#include <sstream>
-#include <stdexcept>
 #include <SDL2/SDL_ttf.h>
 #include <string>
 #include <sys/poll.h>
 #include <sys/types.h>
-#include <unordered_map>
 #include <utf8cpp/utf8.h>
 #include <pty.h>
 #include <fcntl.h>
@@ -27,8 +21,6 @@
 #include <poll.h>
 #include <utf8cpp/utf8/checked.h>
 #include <utf8cpp/utf8/cpp11.h>
-#include <utility>
-#include <vector>
 #include "Application.hpp"
 
 

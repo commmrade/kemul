@@ -1,8 +1,6 @@
 #pragma once
 #include <SDL2/SDL_keycode.h>
 #include <SDL_keyboard.h>
-#include <cstdint>
-#include <iostream>
 #include <memory>
 #include <sys/poll.h>
 #include <vector>

@@ -1,9 +1,6 @@
 #include "Application.hpp"
 #include "Buffer.hpp"
-#include <iostream>
-#include <ostream>
 #include <utf8cpp/utf8.h>
-#include <sstream>
 
 class AnsiParser {
     private:

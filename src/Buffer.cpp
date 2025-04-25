@@ -1,13 +1,9 @@
 #include "Buffer.hpp"
 #include <algorithm>
-#include <cstdint>
-#include <exception>
-#include <iterator>
 #include <utf8cpp/utf8/cpp17.h>
 #include <vector>
 #include <utf8cpp/utf8.h>
 #include <iostream>
-#include "Color.hpp"
 
 
 

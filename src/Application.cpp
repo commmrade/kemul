@@ -23,7 +23,6 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-#include <iostream>
 #include "ANSIParser.hpp"
 
 Application::Application(const std::string &font_path, int width, int height) {
