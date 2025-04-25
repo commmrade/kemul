@@ -32,12 +32,7 @@ constexpr int FONT_PTSIZE = 16;
 //     return 1;
 // }
 
-bool inline operator==(const SDL_Color& lhs, const SDL_Color& rhs) {
-    if (lhs.r == rhs.r && lhs.g == rhs.g && lhs.b == rhs.b && lhs.a == rhs.a) {
-        return true;
-    }
-    return false;
-}
+
 
 struct CursorPos {
     int x{0};
@@ -46,6 +41,7 @@ struct CursorPos {
 
 class Window {
 private:
+    int width_; int height_;
     // Helper stuff
     uint scroll_offset_{0};
     CursorPos cursor_pos_;
@@ -63,11 +59,12 @@ private:
     SDL_Window* window_{nullptr};
     SDL_Renderer* renderer_{nullptr};
     
+    
 
     std::unique_ptr<GlyphCache> glyph_cache_;
 public:
     TTF_Font* font_{nullptr}; // temp
-    explicit Window(const std::string& font_path);
+    explicit Window(const std::string& font_path, int width, int height);
     ~Window();
 
     void process();
@@ -78,7 +75,7 @@ public:
     std::pair<int, int> get_max_texture_size() const;
     std::pair<int, int> get_font_size() const;
 
-    void scroll(Sint32 dir);
+    void scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y);
 
     void set_window_title(const std::string& win_title);
 
@@ -88,6 +85,7 @@ public:
     const int get_scroll_offset() const {
         return scroll_offset_;
     }
+
 
 private:
     void load_font(const std::string& font_path);

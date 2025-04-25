@@ -17,7 +17,6 @@ inline int cell_width(uint32_t codepoint) {
 }
 
 
-
 // 0000 0000 0000 0001 - underline
 // 0000 0000 0000 0010 - bold
 // 0000 0000 0000 0100 - strikethrough
@@ -73,8 +72,12 @@ private:
     int width_cells_;
     int height_cells_;
 
-    int font_width_;
+    int font_width_; // TODO: Remove?
     int font_height_;
+
+    // mouse selection
+    std::pair<int, int> mouse_start_cell{-1, -1};
+    std::pair<int, int> mouse_end_cell{-1, -1};
 
 
 public:
@@ -102,6 +105,12 @@ public:
 
     void insert_chars(int n); // Insert n spaces henceforth shifting existing chars to the right
     void delete_chars(int n); // Delete n chars henceforth shiting existing chars to the left
+
+    // Mouse selection methods
+    void set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset); // Invert colors to signal 'selection'
+    void remove_selection(); // Unset mouse selection vaiables and undo 
+    std::string get_selected_text() const;
+
 
     const std::vector<std::vector<Cell>>& get_buffer() const {
         return buffer_;

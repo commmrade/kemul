@@ -72,7 +72,7 @@ void AnsiParser::parse(const std::string& text) {
                     }
                     if (it != text.end()) {
                         char command = *it++;
-                        // std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
+                        std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
                         handleCSI(command, parseParams(csi_sequence));
                     }
                     state = GeneralState::TEXT;
@@ -104,11 +104,10 @@ std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
     std::istringstream iss(csi_sequence);
     std::string param;
     while (std::getline(iss, param, ';')) {
-        // std::cout << param << std::endl;
         if (param.empty()) {
             params.push_back(0);
         } else if (param[0] == '?') {
-            // Handle private mode parameters (e.g., "?2004")
+            // Handle private mode parameters 
             try {
                 params.push_back(std::stoi(param.substr(1))); // Store number after '?'
                 params.push_back(-1); // Indicator for private mode
@@ -127,7 +126,7 @@ std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
 }
 
 
-void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
+void AnsiParser::handleCSI(char command, std::vector<int> params) {
     static const SDL_Color color_map[8] = {
         {0, 0, 0, 255},       // Black
         {255, 0, 0, 255},     // Red
@@ -137,10 +136,12 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
         {255, 0, 255, 255},   // Magenta
         {0, 255, 255, 255},   // Cyan
         {255, 255, 255, 255}  // White
-    }; // Perhaps add more colors
-    // std::cout << command << std::endl;
+    }; // TODO: add more colors
+
     if (command == 'm') { // Select Graphic Rendition (SGR)
+        if (params.empty()) params.push_back(0);
         for (int param : params) {
+            std::cout << param << std::endl;
             if (param == 0) { // Reset
                 current_cell.fg_color = {200, 200, 200, 255};
                 current_cell.bg_color = {0, 0, 0, 255};
@@ -174,17 +175,15 @@ void AnsiParser::handleCSI(char command, const std::vector<int>& params) {
     } else if (command == 'H') { // Cursor position
         int row = params.size() >= 1 ? params[0] : 1;
         int col = params.size() >= 2 ? params[1] : 1;
-        std::cout << "damn\n";
         application.on_set_cursor(row, col);
     } else if (command == 'J' && params.size() >= 1) {
-        std::cout << "eshkere " << params[0] << " " << std::endl;
         application.on_clear_requested(params[0] == 3); // Clear screen
     } else if (command == 'A') { // Cursor up
-        // std::cout << "up\n";
+        std::cout << "up\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(-n, 0);
     } else if (command == 'B') { // Cursor down
-        // std::cout << "down\n";
+        std::cout << "down\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(n, 0);
     } else if (command == 'C') { // Cursor forward

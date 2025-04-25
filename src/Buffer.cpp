@@ -3,17 +3,18 @@
 #include <cstdint>
 #include <exception>
 #include <iterator>
+#include <utf8cpp/utf8/cpp17.h>
 #include <vector>
 #include <utf8cpp/utf8.h>
 #include <iostream>
-
+#include "Color.hpp"
 
 
 
 
 TermBuffer::TermBuffer(int width, int height, int font_width, int font_height) : font_width_(font_width), font_height_(font_height) {
     width_cells_ = width / font_width - 1; 
-    height_cells_ = height / font_height;
+    height_cells_ = height / font_height - 2;
     buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
 }
 
@@ -44,33 +45,16 @@ void TermBuffer::set_cursor_position(int row, int col) {
     }
     pos_y = std::max(0, row - 1);
 }
-void TermBuffer::move_cursor_pos_relative(int row, int col) {
-    pos_x += col;
+void TermBuffer::move_cursor_pos_relative(int d_row, int d_col) {
+    int new_y = pos_y + d_row;
+    new_y = std::max(0, std::min(new_y, (int)buffer_.size() - 1));
+    pos_y = new_y;
 
-    while (pos_x < 0) {
-        if (pos_y == 0) {
-            pos_x = 0;
-            break;
-        }
-        pos_y--;
-        pos_x += width_cells_;
-    }
-
-    while (pos_x >= width_cells_) {
-        pos_x -= width_cells_;
-        cursor_down();
-    }
-
-    int new_row = pos_y + row;
-    if (new_row < 0) {
-        pos_y = 0;
-    } else if (new_row >= buffer_.size()) {
-        expand_down(new_row - buffer_.size() + 1);
-        pos_y = new_row;
-    } else {
-        pos_y = new_row;
-    }
+    int new_x = pos_x + d_col;
+    new_x = std::max(0, std::min(new_x, width_cells_ - 1));
+    pos_x = new_x;
 }
+
 
 void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
     if (x_dir) {
@@ -170,4 +154,146 @@ void TermBuffer::delete_chars(int n) {
     for (auto i = width_cells_ - n - 1; i < width_cells_; ++i) { // FIll moved characters in the end with spaces
         buffer_[pos_y][i].codepoint = ' ';
     }
+}
+
+void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset) {
+    if (start_y <= end_y) {
+        mouse_start_cell.first = start_x / font_width_;
+        mouse_start_cell.second = start_y / font_height_;
+
+        mouse_end_cell.first = end_x / font_width_;
+        mouse_end_cell.second = end_y / font_height_;
+    } else if (start_y > end_y) {
+        mouse_start_cell.first = end_x / font_width_;
+        mouse_start_cell.second = end_y / font_height_;
+
+        mouse_end_cell.first = start_x / font_width_;
+        mouse_end_cell.second = start_y / font_height_;
+    }
+    mouse_start_cell.second += scroll_offset;
+    mouse_end_cell.second += scroll_offset;
+    mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_);
+    auto i = mouse_start_cell.second;
+    do {
+        int x_start;
+        int x_end;
+        if (mouse_start_cell.second == mouse_end_cell.second) {
+            // Selection on the same line
+            if (mouse_start_cell.first < mouse_end_cell.first) {
+                x_start = mouse_start_cell.first;
+                x_end = mouse_end_cell.first;
+            } else if (x_start > x_end) {
+                x_start = mouse_end_cell.first;
+                x_end = mouse_start_cell.first;  
+            }
+            
+        } else if (i == mouse_start_cell.second) {
+            x_start = mouse_start_cell.first;
+            x_end = width_cells_;
+        } else if (i == mouse_end_cell.second - 1) {
+            x_start = 0;
+            x_end = mouse_end_cell.first;
+        } else {
+            x_start = 0;
+            x_end = width_cells_;
+        }
+
+        x_end = std::min(x_end, width_cells_ - 1);
+
+        for (auto j = x_start; j < x_end; ++j) {
+            // printf("i: %d; j: %d; height: %d; width: %d\n", i, j, height_cells_, width_cells_);
+            auto temp = buffer_[i][j].fg_color;
+            buffer_[i][j].fg_color = buffer_[i][j].bg_color;
+            buffer_[i][j].bg_color = temp;
+        }
+        ++i;
+    } while (i < mouse_end_cell.second);
+}
+
+void TermBuffer::remove_selection() {
+    if (mouse_start_cell.first == -1 || mouse_start_cell.second == -1 || mouse_end_cell.first == -1 || mouse_end_cell.second == -1) {
+        return;
+    }
+
+    auto i = mouse_start_cell.second;
+    do {
+        int x_start;
+        int x_end;
+        if (mouse_start_cell.second == mouse_end_cell.second) {
+            // Selection on the same line
+            if (mouse_start_cell.first < mouse_end_cell.first) {
+                x_start = mouse_start_cell.first;
+                x_end = mouse_end_cell.first;
+            } else if (x_start > x_end) {
+                // std::cout << "here\n";
+                x_start = mouse_end_cell.first;
+                x_end = mouse_start_cell.first;  
+            }
+        } else if (i == mouse_start_cell.second) {
+            x_start = mouse_start_cell.first;
+            x_end = width_cells_;
+        } else if (i == mouse_end_cell.second - 1) {
+            x_start = 0;
+            x_end = mouse_end_cell.first;
+        } else {
+            x_start = 0;
+            x_end = width_cells_;
+        }
+        
+        x_end = std::min(x_end, width_cells_ - 1);
+        for (auto j = x_start; j < x_end; ++j) {
+            // printf("i: %d; j: %d\n", i, j);
+    
+            auto temp = buffer_[i][j].fg_color;
+            buffer_[i][j].fg_color = buffer_[i][j].bg_color;
+            buffer_[i][j].bg_color = temp;
+        }
+        ++i;
+    } while (i < mouse_end_cell.second);
+
+    mouse_start_cell.first = -1;
+    mouse_start_cell.second = -1;
+    mouse_end_cell.first = -1;
+    mouse_end_cell.second = -1;
+}
+
+std::string TermBuffer::get_selected_text() const {
+    if (mouse_start_cell.first == -1 || mouse_start_cell.second == -1 || mouse_end_cell.first == -1 || mouse_end_cell.second == -1) {
+        return "";
+    }
+    std::string result;
+
+    auto i = mouse_start_cell.second;
+    do {
+        int x_start;
+        int x_end;
+        if (mouse_start_cell.second == mouse_end_cell.second) {
+            // Selection on the same line
+            if (mouse_start_cell.first < mouse_end_cell.first) {
+                x_start = mouse_start_cell.first;
+                x_end = mouse_end_cell.first;
+            } else if (x_start > x_end) {
+                std::cout << "here\n";
+                x_start = mouse_end_cell.first;
+                x_end = mouse_start_cell.first;  
+            }
+        } else if (i == mouse_start_cell.second) {
+            x_start = mouse_start_cell.first;
+            x_end = width_cells_;
+        } else if (i == mouse_end_cell.second - 1) {
+            x_start = 0;
+            x_end = mouse_end_cell.first;
+        } else {
+            x_start = 0;
+            x_end = width_cells_;
+        }
+        
+
+        for (auto j = x_start; j < x_end; ++j) {
+            auto character = buffer_[i][j].codepoint;
+            result += std::move(utf8::utf32to8(std::u32string{character}));
+        }
+        ++i;
+    } while (i < mouse_end_cell.second);
+    return result;
 }

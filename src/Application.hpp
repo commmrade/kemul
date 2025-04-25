@@ -52,7 +52,12 @@ public:
     void on_ctrl_d_pressed();
     void on_ctrl_l_pressed();
     void on_ctrl_r_pressed();
+    void on_ctrl_a_pressed(); // CUrsor to the back
+    void on_ctrl_e_pressed(); // Cursor to the end
 
+    void on_selection(int start_x, int start_y, int end_x, int end_y);
+    void on_remove_selection();
+    void on_copy_selection();
 
     // Parser events and other
     void on_erase_event();

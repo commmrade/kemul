@@ -2,6 +2,7 @@
 #include "Buffer.hpp"
 #include "EventHandler.hpp"
 #include "Window.hpp"
+#include <SDL_clipboard.h>
 #include <cstring>
 #include <fcntl.h>
 #include <memory>
@@ -29,7 +30,7 @@ Application::Application(const std::string &font_path, int width, int height) {
     init_sdl();
     init_ttf();
     
-    window_ = std::make_unique<Window>(font_path); // Setting up window before so we can get font size
+    window_ = std::make_unique<Window>(font_path, width, height); // Setting up window before so we can get font size
     auto font_size = window_->get_font_size();
 
     // Setting up terminal stuff
@@ -133,7 +134,7 @@ void Application::loop() {
                 output.append(buf, rd_size);
             }
             parser_->parse(output);
-            std::cout << output << std::endl;
+            // std::cout << output << std::endl;
             window_->set_should_render(true);
         }
 
@@ -210,12 +211,22 @@ void Application::on_ctrl_r_pressed() {
     write(master_fd_, &rev_find, 1);
 }
 
+void Application::on_ctrl_a_pressed() {
+    const char cursor_to_the_back = 0x01;
+    write(master_fd_, &cursor_to_the_back, 1);
+}
+
+void Application::on_ctrl_e_pressed() {
+    const char cursor_to_the_end = 0x05;
+    write(master_fd_, &cursor_to_the_end, 1);
+}
+
 void Application::on_erase_event() {
     buffer_->erase_last_symbol();
     window_->set_should_render(true);
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
-    window_->scroll(scroll_dir);
+    window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
     window_->set_should_render(true);
 }
 
@@ -264,4 +275,17 @@ void Application::on_insert_chars(int n) {
 }
 void Application::on_delete_chars(int n) {
     buffer_->delete_chars(n);
+}
+
+void Application::on_selection(int start_x, int start_y, int end_x, int end_y) {
+    buffer_->set_selection(start_x, start_y, end_x, end_y, window_->get_scroll_offset());
+    window_->set_should_render(true);
+}
+void Application::on_remove_selection() {
+    buffer_->remove_selection();
+}
+
+void Application::on_copy_selection() {
+    auto text = buffer_->get_selected_text();
+    SDL_SetClipboardText(text.c_str());
 }

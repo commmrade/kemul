@@ -26,5 +26,5 @@ class AnsiParser {
         std::vector<int> parseParams(const std::string& csi_sequence);
     
         // Handle CSI commands (e.g., 'm' for SGR, 'H' for cursor position)
-        void handleCSI(char command, const std::vector<int>& params);
+        void handleCSI(char command, std::vector<int> params);
     };

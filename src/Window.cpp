@@ -24,11 +24,11 @@
 #include <utf8cpp/utf8.h>
 #include <utf8cpp/utf8/cpp11.h>
 #include <algorithm>
+#include "Color.hpp"
 
 
 
-
-Window::Window(const std::string& font_path) {
+Window::Window(const std::string& font_path, int width, int height) : width_(width), height_(height) {
     std::cout << "Creating window\n";
     init();
     load_font(font_path);
@@ -154,8 +154,9 @@ void Window::draw(const TermBuffer& term_buffer) {
     should_render_ = false;
 }
 
-void Window::scroll(Sint32 dir) {
+void Window::scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y) {
     if (dir < 0) {
+        if (cursor_pos.second - scroll_offset_ < (height_ / TTF_FontHeight(font_))) return;
         scroll_offset_ += scroll_step_;
     } else if (dir > 0) {
         if (scroll_offset_ >= scroll_step_) {
