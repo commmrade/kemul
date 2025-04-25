@@ -14,7 +14,7 @@
 
 TermBuffer::TermBuffer(int width, int height, int font_width, int font_height) : font_width_(font_width), font_height_(font_height) {
     width_cells_ = width / font_width - 1; 
-    height_cells_ = height / font_height - 2;
+    height_cells_ = height / font_height - 1;
     buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
 }
 
