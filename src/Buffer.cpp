@@ -336,7 +336,7 @@ void TermBuffer::grow_lines(int n) {
     expand_down(n);
 }
 void TermBuffer::shrink_lines(int n) {
-    std::cout << max_pos_y << " " << n << std::endl;
+    // std::cout << max_pos_y << " " << n << std::endl;
     if (buffer_.end() - n > buffer_.begin() + max_pos_y) {
         buffer_.erase(buffer_.end() - n, buffer_.end());
         height_cells_ -= n;
