@@ -67,7 +67,7 @@ private:
     std::vector<std::vector<Cell>> buffer_;
     int pos_x{0};
     int pos_y{0};
-    int max_pos_y{0};
+    int max_pos_y{1};
 
     int width_cells_;
     int height_cells_;
@@ -93,7 +93,6 @@ public:
     void reset_cursor(bool x_dir, bool y_dir);
 
 
-    void resize(int new_width, int new_height, int font_width, int font_height);
     void reset();
 
     void cursor_down();
@@ -105,6 +104,12 @@ public:
 
     void insert_chars(int n); // Insert n spaces henceforth shifting existing chars to the right
     void delete_chars(int n); // Delete n chars henceforth shiting existing chars to the left
+
+    // Resize stuff
+    void resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size);
+    void grow_lines(int n);
+    void shrink_lines(int n);
+
 
     // Mouse selection methods
     void set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset); // Invert colors to signal 'selection'

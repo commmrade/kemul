@@ -1,5 +1,6 @@
 #include "Buffer.hpp"
 #include <algorithm>
+#include <iterator>
 #include <utf8cpp/utf8/cpp17.h>
 #include <vector>
 #include <utf8cpp/utf8.h>
@@ -23,9 +24,6 @@ void TermBuffer::clear_all() {
 }
 
 
-void TermBuffer::resize(int new_width, int new_height, int font_width, int font_height) {
-
-}
 void TermBuffer::reset() {
     buffer_.clear();
     buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
@@ -84,7 +82,7 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
 
 void TermBuffer::cursor_down() {
     if (++pos_y == buffer_.size()) {
-        buffer_.emplace_back(width_cells_);
+        expand_down();
     }
     max_pos_y = std::max(pos_y, max_pos_y);
 }
@@ -93,7 +91,9 @@ void TermBuffer::expand_down(int n) {
     for (auto i = 0; i < n; i++) {
         buffer_.emplace_back(width_cells_);
     }
+    height_cells_ += n;
 }
+
 
 void TermBuffer::erase_in_line(int mode) {
     if (pos_y >= buffer_.size()) return;
@@ -166,9 +166,24 @@ void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, i
         mouse_end_cell.first = start_x / font_width_;
         mouse_end_cell.second = start_y / font_height_;
     }
+
+    if (mouse_start_cell.second >= height_cells_) {
+        mouse_start_cell.first = -1;
+        mouse_start_cell.second = -1;
+        mouse_end_cell.first = -1;
+        mouse_end_cell.second = -1;
+        return;
+    }
+
+
     mouse_start_cell.second += scroll_offset;
     mouse_end_cell.second += scroll_offset;
-    mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_);
+    // std::cout << scroll_offset << std::endl;
+    mouse_start_cell.second = std::min(mouse_start_cell.second, height_cells_);
+    mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_ );
+
+    // std::cout << mouse_end_cell.second << " " << height_cells_ << std::endl;
+
     auto i = mouse_start_cell.second;
     do {
         int x_start;
@@ -292,4 +307,39 @@ std::string TermBuffer::get_selected_text() const {
         ++i;
     } while (i < mouse_end_cell.second);
     return result;
+}
+
+
+// Resizing
+void TermBuffer::resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size) {
+    int new_height_cells = new_window_size.second / font_size.second - 1;
+    int new_width_cells = new_window_size.first / font_size.first - 1;
+    
+    if (height_cells_ < new_height_cells) {
+        grow_lines(new_height_cells - height_cells_ + 1);
+    } else if (height_cells_ > new_height_cells) {
+        shrink_lines(height_cells_ - new_height_cells);
+    } else {
+        // Do nothing
+    }
+
+    if (width_cells_ < new_width_cells) {
+        // grow
+    } else if (width_cells_ > new_width_cells) {
+        // shrink
+    } else {
+        // Do nothin'
+    }
+}
+
+void TermBuffer::grow_lines(int n) {
+    expand_down(n);
+}
+void TermBuffer::shrink_lines(int n) {
+    std::cout << max_pos_y << " " << n << std::endl;
+    if (buffer_.end() - n > buffer_.begin() + max_pos_y) {
+        buffer_.erase(buffer_.end() - n, buffer_.end());
+        height_cells_ -= n;
+    }
+    
 }

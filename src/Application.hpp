@@ -37,7 +37,7 @@ public:
 
     void run();
 
-    // Keypress events
+    // Keypress events and others (like window resize)
     void on_textinput_event(const char* sym);
     void on_backspace_pressed_event();
     void on_enter_pressed_event();
@@ -52,12 +52,13 @@ public:
     void on_ctrl_r_pressed();
     void on_ctrl_a_pressed(); // CUrsor to the back
     void on_ctrl_e_pressed(); // Cursor to the end
+    void on_window_resized();
 
     void on_selection(int start_x, int start_y, int end_x, int end_y);
     void on_remove_selection();
     void on_copy_selection();
 
-    // Parser events and other
+    // Parser events
     void on_erase_event();
     void on_quit_event();
     void on_add_cells(std::vector<Cell> cells);

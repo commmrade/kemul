@@ -288,3 +288,12 @@ void Application::on_copy_selection() {
     auto text = buffer_->get_selected_text();
     SDL_SetClipboardText(text.c_str());
 }
+
+void Application::on_window_resized() {
+    window_->resize();
+    auto win_size = window_->get_window_size();
+    auto font_size = window_->get_font_size();
+    buffer_->resize(win_size, font_size);
+    
+    window_->set_should_render(true);
+}

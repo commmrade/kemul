@@ -76,6 +76,8 @@ public:
 
     void scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y);
 
+    void resize();
+
     void set_window_title(const std::string& win_title);
 
     void set_scroll_offset(int n) {
@@ -85,6 +87,11 @@ public:
         return scroll_offset_;
     }
 
+    const std::pair<int, int> get_window_size() {
+        int w, h;
+        SDL_GetWindowSize(window_, &w, &h);
+        return {w, h};
+    }
 
 private:
     void load_font(const std::string& font_path);

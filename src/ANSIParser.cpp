@@ -73,7 +73,7 @@ void AnsiParser::parse(const std::string& text) {
                     }
                     if (it != text.end()) {
                         char command = *it++;
-                        std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
+                        // std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
                         handleCSI(command, parseParams(csi_sequence));
                     }
                     state = GeneralState::TEXT;

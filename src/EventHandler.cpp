@@ -2,6 +2,7 @@
 #include <SDL_clipboard.h>
 #include <SDL_events.h>
 #include <SDL_keycode.h>
+#include <SDL_video.h>
 
 EventHandler::EventHandler(Application& application) : application(application) {
     
@@ -78,6 +79,12 @@ void EventHandler::handle_event(SDL_Event& event) {
             mouse_start_y = -1;
             mouse_end_x = -1;
             mouse_end_y = -1;
+            break;
+        }
+        case SDL_WINDOWEVENT: {
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+                application.on_window_resized();
+            }
             break;
         }
     }

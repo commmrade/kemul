@@ -52,7 +52,7 @@ std::pair<int, int> Window::get_font_size() const {
 
 void Window::init() {
     std::cout << "Creating SDL_Window\n";
-    window_ = SDL_CreateWindow("Kemul", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 900, 600, SDL_WINDOW_SHOWN);
+    window_ = SDL_CreateWindow("Kemul", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 900, 600, SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     if (!window_) {
         throw std::runtime_error(std::string{"Could not create window: "} + SDL_GetError());
     }
@@ -84,13 +84,16 @@ void Window::draw(const TermBuffer& term_buffer) {
         return;
     }
     cursor_pos_.x = 10;
-    cursor_pos_.y = 10;
+    cursor_pos_.y = get_font_size().second / 2;
 
     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
     decltype(auto) buffer = term_buffer.get_buffer();
-    for (auto i = scroll_offset_; i < buffer.size(); ++i) {
+
+    auto render_limit = get_window_size().second / get_font_size().second;
+    // std::cout << render_limit << std::endl;
+    for (auto i = scroll_offset_; i < (scroll_offset_ + render_limit > buffer.size() ? buffer.size() : scroll_offset_ + render_limit); ++i) {
     
         for (auto cell : buffer[i]) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
@@ -124,18 +127,10 @@ void Window::draw(const TermBuffer& term_buffer) {
 
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
 
-            
-
             cursor_pos_.x += src.w;
-
-            
         }
         cursor_pos_.x = 10;
         cursor_pos_.y += TTF_FontHeight(font_);
-        // if (i != buffer.size() - 1) {
-        //     // cursor_pos_.y += TTF_FontHeight(font_);
-        //     // cursor_pos_.x = 10;
-        // }
     }
 
 
@@ -153,13 +148,19 @@ void Window::draw(const TermBuffer& term_buffer) {
 
 void Window::scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y) {
     if (dir < 0) {
-        if (cursor_pos.second - scroll_offset_ < (height_ / TTF_FontHeight(font_))) return;
+        if (cursor_pos.second - scroll_offset_ + 1 < height_ / TTF_FontHeight(font_)) return;
         scroll_offset_ += scroll_step_;
     } else if (dir > 0) {
         if (scroll_offset_ >= scroll_step_) {
             scroll_offset_ -= scroll_step_;
         }
     }
+}
+
+void Window::resize() {
+    auto dim = get_window_size();
+    height_ = dim.second;
+    width_ = dim.first;
 }
 
 void Window::set_window_title(const std::string& win_title) {
