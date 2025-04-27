@@ -180,11 +180,9 @@ void AnsiParser::handleCSI(char command, std::vector<int> params) {
     } else if (command == 'J' && params.size() >= 1) {
         application.on_clear_requested(params[0] == 3); // Clear screen
     } else if (command == 'A') { // Cursor up
-        std::cout << "up\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(-n, 0);
     } else if (command == 'B') { // Cursor down
-        std::cout << "down\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(n, 0);
     } else if (command == 'C') { // Cursor forward

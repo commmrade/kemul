@@ -294,6 +294,11 @@ void Application::on_window_resized() {
     auto win_size = window_->get_window_size();
     auto font_size = window_->get_font_size();
     buffer_->resize(win_size, font_size);
-    
+
+    // Update winsize somewhere
+    winsize wins;
+    wins.ws_col = win_size.first / font_size.first - 1;
+    wins.ws_row = 10;
+    ioctl(master_fd_, TIOCSWINSZ, &wins);
     window_->set_should_render(true);
 }

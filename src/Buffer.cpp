@@ -5,7 +5,7 @@
 #include <vector>
 #include <utf8cpp/utf8.h>
 #include <iostream>
-
+#include <ranges>
 
 
 
@@ -70,9 +70,9 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
         buffer_[pos_y][pos_x] = std::move(cell);
         
         pos_x += 1;
-        // std::cout << pos_x << " " << pos_y << " " << width_cells_ << std::endl;
         if (pos_x >= width_cells_) {
-            std::cout << "down\n";
+            // Set wrapline flag
+            buffer_[pos_y][pos_x - 1].set_wrapline();
             cursor_down();
             pos_x = 0;
         }
@@ -113,11 +113,13 @@ void TermBuffer::erase_in_line(int mode) {
 
     for (int x = start; x < end; ++x) {
         buffer_[pos_y][x].codepoint = ' '; // reset cel
+        buffer_[pos_y][x].flags = 0;
     }
 }
 
 void TermBuffer::erase_last_symbol() { 
     buffer_[pos_y][pos_x].codepoint = ' ';
+    buffer_[pos_y][pos_x].flags = 0;
     pos_x--;
     if (pos_x < 0) {
         pos_y--;
@@ -137,6 +139,7 @@ void TermBuffer::insert_chars(int n) {
 
     for (auto i = pos_x; i < pos_x + n; ++i) { // Fill from cursor to cursor + n with spaces
         buffer_[pos_y][i].codepoint = ' ';
+        buffer_[pos_y][pos_x].flags = 0;
     }
 }
 void TermBuffer::delete_chars(int n) {
@@ -149,6 +152,7 @@ void TermBuffer::delete_chars(int n) {
 
     for (auto i = width_cells_ - n - 1; i < width_cells_; ++i) { // FIll moved characters in the end with spaces
         buffer_[pos_y][i].codepoint = ' ';
+        buffer_[pos_y][pos_x].flags = 0;
     }
 }
 
@@ -319,16 +323,12 @@ void TermBuffer::resize(std::pair<int, int> new_window_size, std::pair<int, int>
         grow_lines(new_height_cells - height_cells_ + 1);
     } else if (height_cells_ > new_height_cells) {
         shrink_lines(height_cells_ - new_height_cells);
-    } else {
-        // Do nothing
     }
 
     if (width_cells_ < new_width_cells) {
-        // grow
+        grow_cols(new_width_cells - width_cells_ + 1, true);
     } else if (width_cells_ > new_width_cells) {
-        // shrink
-    } else {
-        // Do nothin'
+        shrink_cols(width_cells_ - new_width_cells, true);
     }
 }
 
@@ -342,4 +342,47 @@ void TermBuffer::shrink_lines(int n) {
         height_cells_ -= n;
     }
     
+}
+
+void TermBuffer::grow_cols(int n, bool reflow) {
+    width_cells_ += n;
+
+    auto should_reflow = [reflow, this](const std::vector<Cell>& row) {
+        auto length = row.size();
+        return reflow && length > 0 && length < width_cells_ && row[length - 1].is_wrapline();
+    };
+
+    std::vector<std::vector<Cell>> reversed;
+    reversed.reserve(height_cells_);
+
+    for (auto it = buffer_.rbegin(), end = buffer_.rend(); it != end; ++it) {
+        std::vector<Cell> row = std::move(*it);
+
+        if (!reversed.empty() && should_reflow(row)) {
+            row.back().set_wrapline(false);
+
+            auto& last_row = reversed.back();
+
+            auto can_take_n = std::min(last_row.size(), width_cells_ - row.size());
+            row.insert(row.end(), last_row.begin(), last_row.begin() + can_take_n);
+            last_row.erase(last_row.begin(), last_row.begin() + can_take_n);
+
+            if (std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
+                reversed.pop_back();
+            } else {
+                row.back().set_wrapline();
+            }
+        }
+        if (row.size() < width_cells_) {
+            row.resize(width_cells_);
+        }
+        reversed.push_back(std::move(row));
+    }
+
+    buffer_ = reversed | std::views::reverse | std::ranges::to<std::vector<std::vector<Cell>>>();
+    buffer_.resize(height_cells_);
+}
+
+void TermBuffer::shrink_cols(int n, bool reflow) {
+    width_cells_ -= n;
 }

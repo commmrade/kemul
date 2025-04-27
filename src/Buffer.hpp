@@ -20,6 +20,7 @@ inline int cell_width(uint32_t codepoint) {
 // 0000 0000 0000 0001 - underline
 // 0000 0000 0000 0010 - bold
 // 0000 0000 0000 0100 - strikethrough
+// 0000 0000 0000 1000 - wrapline
 
 
 struct Cell {
@@ -59,6 +60,17 @@ struct Cell {
     }
     bool is_strikethrough() const {
         return flags & 0b0000'0000'0000'0100;
+    }
+
+    void set_wrapline(bool value = true) {
+        if (!value) {
+            flags &= ~0b0000'0000'0000'1000;
+            return;
+        }
+        flags |= 0b0000'0000'0000'1000;
+    }
+    bool is_wrapline() const {
+        return flags & 0b0000'0000'0000'1000;
     }
 };
 
@@ -107,8 +119,12 @@ public:
 
     // Resize stuff
     void resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size);
+
     void grow_lines(int n);
     void shrink_lines(int n);
+    
+    void grow_cols(int n, bool reflow);
+    void shrink_cols(int n, bool reflow);
 
 
     // Mouse selection methods
