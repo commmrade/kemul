@@ -345,18 +345,21 @@ void TermBuffer::shrink_lines(int n) {
 }
 
 void TermBuffer::grow_cols(int n, bool reflow) {
+    if (n < 0) return;
+
+    auto old_width = width_cells_;
     width_cells_ += n;
 
     auto should_reflow = [reflow, this](const std::vector<Cell>& row) {
         auto length = row.size();
-        return reflow && length > 0 && length < width_cells_ && row[length - 1].is_wrapline();
+        return reflow && length > 0 && length < width_cells_ && row.back().is_wrapline();
     };
 
     std::vector<std::vector<Cell>> reversed;
     reversed.reserve(height_cells_);
 
     for (auto it = buffer_.rbegin(), end = buffer_.rend(); it != end; ++it) {
-        std::vector<Cell> row = std::move(*it);
+        std::vector<Cell> row = *it;
 
         if (!reversed.empty() && should_reflow(row)) {
             row.back().set_wrapline(false);
@@ -367,22 +370,82 @@ void TermBuffer::grow_cols(int n, bool reflow) {
             row.insert(row.end(), last_row.begin(), last_row.begin() + can_take_n);
             last_row.erase(last_row.begin(), last_row.begin() + can_take_n);
 
-            if (std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
+            if (last_row.empty() || std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
                 reversed.pop_back();
             } else {
                 row.back().set_wrapline();
             }
         }
-        if (row.size() < width_cells_) {
-            row.resize(width_cells_);
-        }
+        row.resize(width_cells_);
         reversed.push_back(std::move(row));
     }
 
-    buffer_ = reversed | std::views::reverse | std::ranges::to<std::vector<std::vector<Cell>>>();
-    buffer_.resize(height_cells_);
+    buffer_.assign(reversed.rbegin(), reversed.rend());
+    if (buffer_.size() < height_cells_) {
+        expand_down(height_cells_ - buffer_.size());
+    }
 }
 
 void TermBuffer::shrink_cols(int n, bool reflow) {
-    width_cells_ -= n;
+    if (n <= 0) return;
+    if (n >= width_cells_) {
+        width_cells_ = 1;
+    } else {
+        width_cells_ -= n;
+    }
+
+    auto row_length = [](const std::vector<Cell>& row) {
+        return std::count_if(row.begin(), row.end(), [](const Cell& cell) {
+            return cell.codepoint != 0;
+        });
+    };
+
+    std::vector<std::vector<Cell>> new_buffer;
+    std::vector<Cell> carry; 
+
+    for (auto it = buffer_.begin(), end = buffer_.end(); it != end; ++it) {
+        auto row = *it;
+
+        if (!carry.empty()) { // If there is some carry-over
+            if (carry.back().is_wrapline()) {  // And there was wrapline on the last symbol
+                row.insert(row.begin(), carry.begin(), carry.end()); // Insert the carry-over into the current line
+            } else { // If no wrapline
+                carry.resize(width_cells_);
+                new_buffer.push_back(std::move(carry)); // Push onto a new line
+            }
+            carry.clear(); // Clear carry-over
+        }
+
+        auto row_length_real = row_length(row); // Real length which counts only codepoints != 0
+        if (row_length_real > width_cells_) {
+            carry.assign(row.begin() + width_cells_, row.begin() + row_length_real); // Taking overend cells
+
+            if (row[width_cells_ - 1].codepoint != 0) {
+                row[width_cells_ - 1].set_wrapline(); // Setting wrapline for the last Cell, and that cell is something because row_length-real > width_cells
+            }
+        }
+        row.resize(width_cells_);
+        new_buffer.push_back(std::move(row));
+    }
+
+    while (!carry.empty()) {
+        std::vector<Cell> new_row;
+        if (carry.size() > width_cells_) {
+            new_row.assign(carry.begin(), carry.begin() + width_cells_);
+            carry.erase(carry.begin(), carry.begin() + width_cells_);
+            if (!new_row.empty() && new_row.back().codepoint != 0) {
+                new_row.back().set_wrapline();
+            }
+        } else {
+            new_row = std::move(carry);
+            carry.clear();
+        }
+        new_row.resize(width_cells_);
+        new_buffer.push_back(std::move(new_row));
+    }
+
+    buffer_ = std::move(new_buffer);
+    if (buffer_.size() < height_cells_) {
+        expand_down(height_cells_ - buffer_.size());
+    }
 }
