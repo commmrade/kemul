@@ -345,8 +345,6 @@ void TermBuffer::shrink_lines(int n) {
 }
 
 void TermBuffer::grow_cols(int n, bool reflow) {
-    if (n < 0) return;
-
     auto old_width = width_cells_;
     width_cells_ += n;
 
@@ -387,7 +385,6 @@ void TermBuffer::grow_cols(int n, bool reflow) {
 }
 
 void TermBuffer::shrink_cols(int n, bool reflow) {
-    if (n <= 0) return;
     if (n >= width_cells_) {
         width_cells_ = 1;
     } else {
