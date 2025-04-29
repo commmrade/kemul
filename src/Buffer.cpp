@@ -9,9 +9,9 @@
 
 
 
-TermBuffer::TermBuffer(int width, int height, int font_width, int font_height) : font_width_(font_width), font_height_(font_height) {
-    width_cells_ = width / font_width - 1; 
-    height_cells_ = height / font_height - 1;
+TermBuffer::TermBuffer(int width, int height, int cell_width, int cell_height) : cell_size_({cell_width, cell_height}) {
+    width_cells_ = width / cell_width - 1;
+    height_cells_ = height / cell_height - 1;
     buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
 }
 
@@ -27,35 +27,35 @@ void TermBuffer::clear_all() {
 void TermBuffer::reset() {
     buffer_.clear();
     buffer_.resize(height_cells_, std::vector<Cell>(width_cells_));
-    pos_x = 0;
-    pos_y = 0;
-    max_pos_y = 0;
+    cursor_x_ = 0;
+    cursor_y_ = 0;
+    max_pos_y_ = 0;
 }
 
 void TermBuffer::set_cursor_position(int row, int col) {
-    pos_x = std::max(0, std::min(col - 1, width_cells_ - 1));
+    cursor_x_ = std::max(0, std::min(col - 1, width_cells_ - 1));
     if (row - 1 >= buffer_.size()) {
         expand_down(row - buffer_.size());
     }
-    pos_y = std::max(0, row - 1);
+    cursor_y_ = std::max(0, row - 1);
 }
 void TermBuffer::move_cursor_pos_relative(int d_row, int d_col) {
-    int new_y = pos_y + d_row;
+    int new_y = cursor_y_ + d_row;
     new_y = std::max(0, std::min(new_y, (int)buffer_.size() - 1));
-    pos_y = new_y;
+    cursor_y_ = new_y;
 
-    int new_x = pos_x + d_col;
+    int new_x = cursor_x_ + d_col;
     new_x = std::max(0, std::min(new_x, width_cells_ - 1));
-    pos_x = new_x;
+    cursor_x_ = new_x;
 }
 
 
 void TermBuffer::reset_cursor(bool x_dir, bool y_dir) {
     if (x_dir) {
-        pos_x = 0;
+        cursor_x_ = 0;
     }
     if (y_dir) {
-        pos_y = 0;
+        cursor_y_ = 0;
     }
 }
 
@@ -67,29 +67,29 @@ void TermBuffer::add_cells(std::vector<Cell> cells) {
             continue;
         }
 
-        buffer_[pos_y][pos_x] = std::move(cell);
+        buffer_[cursor_y_][cursor_x_] = std::move(cell);
         
-        pos_x += 1;
-        if (pos_x >= width_cells_) {
+        cursor_x_ += 1;
+        if (cursor_x_ >= width_cells_) {
             // Set wrapline flag
-            buffer_[pos_y][pos_x - 1].set_wrapline();
+            buffer_[cursor_y_][cursor_x_ - 1].set_wrapline();
             cursor_down();
-            pos_x = 0;
+            cursor_x_ = 0;
         }
     }
 }
 
 
 void TermBuffer::cursor_down() {
-    if (++pos_y == buffer_.size()) {
+    if (++cursor_y_ == buffer_.size()) {
         expand_down();
     }
-    max_pos_y = std::max(pos_y, max_pos_y);
+    max_pos_y_ = std::max(cursor_y_, max_pos_y_);
 }
 
 void TermBuffer::cursor_up(int n) {
-    if ((pos_y -= n) < 0) {
-        pos_y = 0;
+    if ((cursor_y_ -= n) < 0) {
+        cursor_y_ = 0;
     }
 }
 
@@ -102,15 +102,15 @@ void TermBuffer::expand_down(int n) {
 
 
 void TermBuffer::erase_in_line(int mode) {
-    if (pos_y >= buffer_.size()) return;
+    if (cursor_y_ >= buffer_.size()) return;
 
     int start = 0;
     int end = width_cells_;
 
     if (mode == 0) { // fron cursor to the ened
-        start = pos_x;
+        start = cursor_x_;
     } else if (mode == 1) { // from start to cursor
-        end = pos_x + 1;
+        end = cursor_x_ + 1;
         std::cout << "heh\n";
     } else if (mode == 2) { // whole line
         start = 0;
@@ -118,63 +118,63 @@ void TermBuffer::erase_in_line(int mode) {
     }
 
     for (int x = start; x < end; ++x) {
-        buffer_[pos_y][x].codepoint = 0; // reset cel
-        buffer_[pos_y][x].flags = 0;
+        buffer_[cursor_y_][x].codepoint = 0; // reset cel
+        buffer_[cursor_y_][x].flags = 0;
     }
 }
 
 void TermBuffer::erase_last_symbol() { 
-    buffer_[pos_y][pos_x].codepoint = 0;
-    buffer_[pos_y][pos_x].flags = 0;
-    pos_x--;
-    if (pos_x < 0) {
-        pos_y--;
-        pos_x = width_cells_ - 1;
+    buffer_[cursor_y_][cursor_x_].codepoint = 0;
+    buffer_[cursor_y_][cursor_x_].flags = 0;
+    cursor_x_--;
+    if (cursor_x_ < 0) {
+        cursor_y_--;
+        cursor_x_ = width_cells_ - 1;
     }
 }
 
 void TermBuffer::insert_chars(int n) {
-    if (n <= 0 || pos_x >= width_cells_) return;
+    if (n <= 0 || cursor_x_ >= width_cells_) return;
 
-    n = std::min(n, width_cells_ - pos_x);
+    n = std::min(n, width_cells_ - cursor_x_);
 
 
-    for (auto i = width_cells_ - n - 1; i >= pos_x; --i) { // Move characters to the right from the cursor 
-        buffer_[pos_y][i + n] = buffer_[pos_y][i];
+    for (auto i = width_cells_ - n - 1; i >= cursor_x_; --i) { // Move characters to the right from the cursor 
+        buffer_[cursor_y_][i + n] = buffer_[cursor_y_][i];
     }
 
-    for (auto i = pos_x; i < pos_x + n; ++i) { // Fill from cursor to cursor + n with spaces
-        buffer_[pos_y][i].codepoint = 0;
-        buffer_[pos_y][pos_x].flags = 0;
+    for (auto i = cursor_x_; i < cursor_x_ + n; ++i) { // Fill from cursor to cursor + n with spaces
+        buffer_[cursor_y_][i].codepoint = 0;
+        buffer_[cursor_y_][cursor_x_].flags = 0;
     }
 }
 void TermBuffer::delete_chars(int n) {
-    if (n <= 0 || pos_x < 0) return;
+    if (n <= 0 || cursor_x_ < 0) return;
     
     
-    for (auto i = pos_x; i < width_cells_ - n - 1; ++i) { // Move characters left after the cursor
-        buffer_[pos_y][i] = buffer_[pos_y][i + n];
+    for (auto i = cursor_x_; i < width_cells_ - n - 1; ++i) { // Move characters left after the cursor
+        buffer_[cursor_y_][i] = buffer_[cursor_y_][i + n];
     }
 
     for (auto i = width_cells_ - n - 1; i < width_cells_; ++i) { // FIll moved characters in the end with spaces
-        buffer_[pos_y][i].codepoint = 0;
-        buffer_[pos_y][pos_x].flags = 0;
+        buffer_[cursor_y_][i].codepoint = 0;
+        buffer_[cursor_y_][cursor_x_].flags = 0;
     }
 }
 
 void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset) {
     if (start_y <= end_y) {
-        mouse_start_cell.first = start_x / font_width_;
-        mouse_start_cell.second = start_y / font_height_;
+        mouse_start_cell.first = start_x / cell_size_.first;
+        mouse_start_cell.second = start_y / cell_size_.second;
 
-        mouse_end_cell.first = end_x / font_width_;
-        mouse_end_cell.second = end_y / font_height_;
+        mouse_end_cell.first = end_x / cell_size_.first;
+        mouse_end_cell.second = end_y / cell_size_.second;
     } else if (start_y > end_y) {
-        mouse_start_cell.first = end_x / font_width_;
-        mouse_start_cell.second = end_y / font_height_;
+        mouse_start_cell.first = end_x / cell_size_.first;
+        mouse_start_cell.second = end_y / cell_size_.second;
 
-        mouse_end_cell.first = start_x / font_width_;
-        mouse_end_cell.second = start_y / font_height_;
+        mouse_end_cell.first = start_x / cell_size_.first;
+        mouse_end_cell.second = start_y / cell_size_.second;
     }
 
     if (mouse_start_cell.second >= height_cells_) {
@@ -184,7 +184,6 @@ void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, i
         mouse_end_cell.second = -1;
         return;
     }
-
 
     mouse_start_cell.second += scroll_offset;
     mouse_end_cell.second += scroll_offset;
@@ -322,8 +321,13 @@ std::string TermBuffer::get_selected_text() const {
 
 // Resizing
 void TermBuffer::resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size) {
-    int new_height_cells = new_window_size.second / font_size.second - 1;
-    int new_width_cells = new_window_size.first / font_size.first - 1;
+    remove_selection(); // Check if something is selected already inside remove func
+
+    cell_size_.first = font_size.first;
+    cell_size_.second = font_size.second;
+
+    int new_height_cells = new_window_size.second / cell_size_.second - 1;
+    int new_width_cells = new_window_size.first / cell_size_.first - 1;
     
     if (height_cells_ < new_height_cells) {
         grow_lines(new_height_cells - height_cells_ + 1);
@@ -342,12 +346,10 @@ void TermBuffer::grow_lines(int n) {
     expand_down(n);
 }
 void TermBuffer::shrink_lines(int n) {
-    // std::cout << max_pos_y << " " << n << std::endl;
-    if (buffer_.end() - n > buffer_.begin() + max_pos_y) {
+    if (buffer_.end() - n > buffer_.begin() + max_pos_y_) {
         buffer_.erase(buffer_.end() - n, buffer_.end());
         height_cells_ -= n;
     }
-    
 }
 
 void TermBuffer::grow_cols(int n, bool reflow) {
@@ -381,7 +383,8 @@ void TermBuffer::grow_cols(int n, bool reflow) {
 
             if (last_row.empty() || std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
                 reversed.pop_back(); // We don't need empty line, so just pop it
-                cursor_delta++;
+                ++cursor_delta;
+                --max_pos_y_; // So scrolling  isnt fucked
             } else {
                 row.back().set_wrapline(); // If there are cells left, line is still wrapped, so set this flag again
             }
@@ -424,6 +427,7 @@ void TermBuffer::shrink_cols(int n, bool reflow) {
                 carry.resize(width_cells_);
                 new_buffer.push_back(std::move(carry)); // Push onto a new line
                 cursor_down(); // Make sure it doesnt fuck things up
+                ++max_pos_y_; // So scrolling  isnt fucked
             }
             carry.clear(); // Clear carry-over
         }

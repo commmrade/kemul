@@ -77,15 +77,14 @@ struct Cell {
 class TermBuffer {
 private:
     std::vector<std::vector<Cell>> buffer_;
-    int pos_x{0};
-    int pos_y{0};
-    int max_pos_y{1};
+    int cursor_x_{0};
+    int cursor_y_{0};
+    int max_pos_y_{1};
 
     int width_cells_;
     int height_cells_;
 
-    int font_width_; // TODO: Remove?
-    int font_height_;
+    std::pair<int, int> cell_size_;
 
     // mouse selection
     std::pair<int, int> mouse_start_cell{-1, -1};
@@ -93,37 +92,34 @@ private:
 
 
 public:
-    explicit TermBuffer(int width, int height, int font_width, int font_height);
+    explicit TermBuffer(int width, int height, int cell_width, int cell_height);
     ~TermBuffer();
 
+    // Adding cells
     void add_cells(std::vector<Cell> cells);
 
     void clear_all();
+    void reset();
 
+    // Cursor
+    void cursor_down();
     void set_cursor_position(int row, int col);
     void move_cursor_pos_relative(int row, int col);
     void reset_cursor(bool x_dir, bool y_dir);
-
-
-    void reset();
-
-    void cursor_down();
     void cursor_up(int n = 1);
     void expand_down(int n = 1);
 
-
+    // Chars manipulation
     void erase_last_symbol();
     void erase_in_line(int mode);
-
     void insert_chars(int n); // Insert n spaces henceforth shifting existing chars to the right
     void delete_chars(int n); // Delete n chars henceforth shiting existing chars to the left
 
     // Resize stuff
     void resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size);
-
     void grow_lines(int n);
     void shrink_lines(int n);
-    
+
     void grow_cols(int n, bool reflow);
     void shrink_cols(int n, bool reflow);
 
@@ -133,15 +129,14 @@ public:
     void remove_selection(); // Unset mouse selection vaiables and undo 
     std::string get_selected_text() const;
 
-
+    // Some getters
     const std::vector<std::vector<Cell>>& get_buffer() const {
         return buffer_;
     }
-
     const std::pair<int, int> get_cursor_pos() const {
-        return {pos_x, pos_y};
+        return {cursor_x_, cursor_y_};
     }
     const int get_max_y() const {
-        return max_pos_y;
+        return max_pos_y_;
     }
 };

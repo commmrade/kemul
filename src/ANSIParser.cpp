@@ -74,7 +74,7 @@ void AnsiParser::parse(const std::string& text) {
                     if (it != text.end()) {
                         char command = *it++;
                         // std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
-                        handleCSI(command, parseParams(csi_sequence));
+                        handle_CSI(command, parse_params(csi_sequence));
                     }
                     state = GeneralState::TEXT;
                 } else if (c == ']') { // Handle OSC sequences
@@ -100,7 +100,7 @@ void AnsiParser::parse(const std::string& text) {
     }
 }
 
-std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
+std::vector<int> AnsiParser::parse_params(const std::string& csi_sequence) {
     std::vector<int> params;
     std::istringstream iss(csi_sequence);
     std::string param;
@@ -127,7 +127,7 @@ std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
 }
 
 
-void AnsiParser::handleCSI(char command, std::vector<int> params) {
+void AnsiParser::handle_CSI(char command, std::vector<int> params) {
     static const SDL_Color color_map[8] = {
         {0, 0, 0, 255},       // Black
         {255, 0, 0, 255},     // Red
@@ -189,7 +189,6 @@ void AnsiParser::handleCSI(char command, std::vector<int> params) {
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(0, n);
     } else if (command == 'D') { // Cursor backward
-        std::cout << "backward\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(0, -n);
     } else if (command == 'K') {
