@@ -22,6 +22,7 @@ private:
 
     bool is_running_{true};
 
+    
 
     // Members
     std::unique_ptr<Window> window_;

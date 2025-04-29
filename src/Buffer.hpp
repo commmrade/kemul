@@ -108,6 +108,7 @@ public:
     void reset();
 
     void cursor_down();
+    void cursor_up(int n = 1);
     void expand_down(int n = 1);
 
 
