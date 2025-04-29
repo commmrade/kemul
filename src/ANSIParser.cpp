@@ -142,7 +142,6 @@ void AnsiParser::handleCSI(char command, std::vector<int> params) {
     if (command == 'm') { // Select Graphic Rendition (SGR)
         if (params.empty()) params.push_back(0);
         for (int param : params) {
-            std::cout << param << std::endl;
             if (param == 0) { // Reset
                 current_cell.fg_color = {200, 200, 200, 255};
                 current_cell.bg_color = {0, 0, 0, 255};
