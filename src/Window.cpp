@@ -78,20 +78,17 @@ void Window::draw(const TermBuffer& term_buffer) {
         SDL_Delay(16);
         return;
     }
-    cursor_pos_.x = 10;
-    cursor_pos_.y = get_font_size().second / 2;
 
     auto font_size = get_font_size();
+    cursor_pos_.x = 10;
+    cursor_pos_.y = font_size.second / 2;
 
     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
     decltype(auto) buffer = term_buffer.get_buffer();
-
-    auto render_limit = get_window_size().second / get_font_size().second;
-    // std::cout << render_limit << std::endl;
+    auto render_limit = get_window_size().second / font_size.second;
     for (auto i = scroll_offset_; i < (scroll_offset_ + render_limit > buffer.size() ? buffer.size() : scroll_offset_ + render_limit); ++i) {
-    
         for (auto cell : buffer[i]) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
             auto* atlas = glyph_cache_->atlas();
@@ -123,16 +120,14 @@ void Window::draw(const TermBuffer& term_buffer) {
             }
 
             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
-
             cursor_pos_.x += src.w;
         }
         cursor_pos_.x = 10;
         cursor_pos_.y += font_size.second;
     }
 
-
-    auto [cursor_x, cursor_y] = term_buffer.get_cursor_pos();
     
+    auto [cursor_x, cursor_y] = term_buffer.get_cursor_pos();
     const auto& row = buffer[cursor_y];
     SDL_Rect cursor_rect{cursor_x * font_size.first + font_size.first, (cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, 10, font_size.second};
     SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
