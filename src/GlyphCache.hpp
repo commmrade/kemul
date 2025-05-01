@@ -11,7 +11,6 @@
 class GlyphCache {
 private:
     SDL_Texture* atlas_texture_;
-    TTF_Font* font_; // Passed from Window, owned by it too, so don't destroy it
 
     int max_width_;
     int max_height_;
@@ -24,10 +23,10 @@ public:
     explicit GlyphCache(SDL_Renderer* renderer, TTF_Font* font, std::pair<int, int> max_dimensions);
     ~GlyphCache();
 
-    void add_glyph(SDL_Renderer* renderer, uint32_t codepoint);
+    void add_glyph(SDL_Renderer* renderer, TTF_Font* font, uint32_t codepoint);
 
     bool glyph_exists(uint32_t codepoint);
     std::optional<SDL_Rect> get_glyph_pos(uint32_t codepoint);
-    SDL_Rect get_or_create_glyph_pos(SDL_Renderer* renderer, uint32_t codepoint);
+    SDL_Rect get_or_create_glyph_pos(SDL_Renderer* renderer, TTF_Font* font, uint32_t codepoint);
     SDL_Texture* const atlas() const { return atlas_texture_; }
 };

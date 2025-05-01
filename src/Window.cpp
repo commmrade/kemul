@@ -94,7 +94,7 @@ void Window::draw(const TermBuffer& term_buffer) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
             auto* atlas = glyph_cache_->atlas();
             
-            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, cell.codepoint);
+            SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, font_, cell.codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
 
             SDL_SetTextureColorMod(atlas, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b);

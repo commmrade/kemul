@@ -130,11 +130,9 @@ void Application::loop() {
                 output.append(buf, rd_size);
             }
             parser_->parse(output);
-            // std::cout << output << std::endl;
             window_->set_should_render(true);
         }
 
-        window_->process();
         window_->draw(*buffer_.get());
     }
 }
@@ -174,11 +172,9 @@ void Application::on_keys_pressed(Uint16 mods, SDL_Keycode keys) {
 
 void Application::on_textinput_event(const char* sym) {
     write(master_fd_, sym, SDL_strlen(sym));
-    window_->set_should_render(true);
 }
 void Application::send_newline() {
     write(master_fd_, "\n", 1);
-    window_->set_should_render(true);
 }
 
 void Application::send_sigsusp() {
@@ -251,7 +247,7 @@ void Application::cursor_to_end() {
 
 void Application::on_erase_event() {
     buffer_->erase_last_symbol();
-    window_->set_should_render(true);
+    // window_->set_shoulda_render(true);
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
     window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
