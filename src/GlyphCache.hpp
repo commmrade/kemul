@@ -6,11 +6,12 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 class GlyphCache {
 private:
     SDL_Texture* atlas_texture_;
-    TTF_Font* font_; // Passed from Window, owned by it too
+    TTF_Font* font_; // Passed from Window, owned by it too, so don't destroy it
 
     int max_width_;
     int max_height_;
@@ -20,7 +21,7 @@ private:
 
     std::unordered_map<uint32_t, SDL_Rect> glyph_positions_;
 public:
-    explicit GlyphCache(SDL_Renderer* renderer, TTF_Font* font, int max_width, int max_height);
+    explicit GlyphCache(SDL_Renderer* renderer, TTF_Font* font, std::pair<int, int> max_dimensions);
     ~GlyphCache();
 
     void add_glyph(SDL_Renderer* renderer, uint32_t codepoint);

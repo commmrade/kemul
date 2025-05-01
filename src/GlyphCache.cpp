@@ -6,9 +6,10 @@
 #include <stdexcept>
 #include <utf8cpp/utf8/cpp17.h>
 #include <iostream>
+#include <utility>
 
-GlyphCache::GlyphCache(SDL_Renderer* renderer, TTF_Font* font, int max_width, int max_height) : font_(font), max_width_(max_width), max_height_(max_height) {
-    atlas_texture_ = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, max_width, max_height);
+GlyphCache::GlyphCache(SDL_Renderer* renderer, TTF_Font* font, std::pair<int, int> max_dimensions) : font_(font), max_width_(max_dimensions.first), max_height_(max_dimensions.second) {
+    atlas_texture_ = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, max_width_, max_height_);
     SDL_SetTextureBlendMode(atlas_texture_, SDL_BLENDMODE_BLEND); // So there is no black rectangle around glyphs which makes drawing BG color impossible
 }
 GlyphCache::~GlyphCache() {
@@ -20,7 +21,6 @@ void GlyphCache::add_glyph(SDL_Renderer* renderer, uint32_t codepoint) {
     SDL_Surface* glyph_surf = TTF_RenderUTF8_Blended(font_, utf8_char.c_str(), SDL_Color{255, 255, 255, 255});
     if (!glyph_surf) {
         std::cerr << "Glyph surface is null\n";
-        std::cout << "char '" << utf8_char << "'" << std::endl;
         return;
     }
     

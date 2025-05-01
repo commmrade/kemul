@@ -267,7 +267,7 @@ void Application::on_move_cursor(int row, int col) {
 }
 
 
-void Application::on_add_cells(std::vector<Cell> cells) {
+void Application::on_add_cells(std::vector<Cell>&& cells) {
     buffer_->add_cells(std::move(cells));
 }
 
@@ -307,7 +307,6 @@ void Application::on_delete_chars(int n) {
 
 void Application::on_selection(int start_x, int start_y, int end_x, int end_y) {
     on_remove_selection();
-    
     buffer_->set_selection(start_x, start_y, end_x, end_y, window_->get_scroll_offset());
     window_->set_should_render(true);
 }

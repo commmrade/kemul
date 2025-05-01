@@ -15,22 +15,6 @@ AnsiParser::AnsiParser(Application& app) : application(app) {
 }
 
 
-void AnsiParser::parse_input(const std::string& text) {
-    std::vector<Cell> cells;
-    auto it = text.begin();
-    while (it != text.end()) {
-        Cell cell = current_cell;
-        uint32_t codepoint = utf8::next(it, text.end());
-        cell.codepoint = codepoint;
-        cells.push_back(cell);
-    }
-
-    if (!cells.empty()) {
-        // on user_input
-        application.on_add_cells(std::move(cells));
-    }
-}
-
 void AnsiParser::parse(const std::string& text) {
     std::string::const_iterator it = text.begin();
     while (it != text.end()) {

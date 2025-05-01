@@ -60,7 +60,7 @@ public:
     // Parser events
     void on_erase_event();
     void on_quit_event();
-    void on_add_cells(std::vector<Cell> cells);
+    void on_add_cells(std::vector<Cell>&& cells);
     void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);
     void on_reset_cursor(bool x_dir, bool y_dir);

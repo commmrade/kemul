@@ -96,7 +96,7 @@ public:
     ~TermBuffer();
 
     // Adding cells
-    void add_cells(std::vector<Cell> cells);
+    void add_cells(std::vector<Cell>&& cells);
 
     void clear_all();
     void reset();
@@ -105,7 +105,7 @@ public:
     void cursor_down();
     void set_cursor_position(int row, int col);
     void move_cursor_pos_relative(int row, int col);
-    void reset_cursor(bool x_dir, bool y_dir);
+    void reset_cursor(bool x_dir, bool y_dir); // Used for \r mostly
     void cursor_up(int n = 1);
     void expand_down(int n = 1);
 
