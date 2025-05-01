@@ -86,6 +86,8 @@ void Window::draw(const TermBuffer& term_buffer) {
     cursor_pos_.x = 10;
     cursor_pos_.y = get_font_size().second / 2;
 
+    auto font_size = get_font_size();
+
     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
@@ -130,11 +132,10 @@ void Window::draw(const TermBuffer& term_buffer) {
             cursor_pos_.x += src.w;
         }
         cursor_pos_.x = 10;
-        cursor_pos_.y += TTF_FontHeight(font_);
+        cursor_pos_.y += font_size.second;
     }
 
 
-    auto font_size = get_font_size();
     auto [cursor_x, cursor_y] = term_buffer.get_cursor_pos();
     
     const auto& row = buffer[cursor_y];
