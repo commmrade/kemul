@@ -66,20 +66,16 @@ public:
     explicit Window(const std::string& font_path, int width, int height);
     ~Window();
 
-    void process();
     void draw(const TermBuffer& term_buffer);
-
     void set_should_render(bool value);
 
     std::pair<int, int> get_max_texture_size() const;
     std::pair<int, int> get_font_size() const;
 
     void scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y);
-
     void resize();
 
     void set_window_title(const std::string& win_title);
-
     void set_scroll_offset(int n) {
         scroll_offset_ = n;
     }

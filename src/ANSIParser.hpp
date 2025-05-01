@@ -17,11 +17,10 @@ class AnsiParser {
     
         void parse(const std::string& text);
 
-        void parse_input(const std::string& text);
     private:
         // Parse CSI parameters (e.g., "1;31" -> {1, 31})
-        std::vector<int> parseParams(const std::string& csi_sequence);
+        std::vector<int> parse_params(const std::string& csi_sequence);
     
         // Handle CSI commands (e.g., 'm' for SGR, 'H' for cursor position)
-        void handleCSI(char command, std::vector<int> params);
+        void handle_CSI(char command, std::vector<int> params); // No need for vec& params
     };

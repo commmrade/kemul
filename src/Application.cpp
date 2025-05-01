@@ -59,7 +59,6 @@ void Application::init_ttf() {
 }
 
 void Application::setup_pty(bool echo, int cols) {
-
     char slave_name[128];
     struct winsize ws;
     ws.ws_col = cols;
@@ -83,8 +82,6 @@ void Application::setup_pty(bool echo, int cols) {
         throw std::runtime_error("Failed to get terminal attributes");
     }
     term_attribs.c_lflag |= IUTF8;
-    // term_attribs.c_lflag &= ~ICANON;
-    // term_attribs.c_oflag &= ~ONLCR;
 
     if (tcsetattr(slave_fd_, TCSANOW, &term_attribs) != 0) {
         throw std::runtime_error("Failed to set terminal attributes");
@@ -133,31 +130,59 @@ void Application::loop() {
                 output.append(buf, rd_size);
             }
             parser_->parse(output);
-            // std::cout << output << std::endl;
             window_->set_should_render(true);
         }
 
-        window_->process();
         window_->draw(*buffer_.get());
+    }
+}
+
+
+void Application::on_keys_pressed(Uint16 mods, SDL_Keycode keys) {
+    if (keys == SDLK_RETURN) {
+        send_newline();
+    } else if (keys == SDLK_v && (mods & KMOD_CTRL) && (mods & KMOD_LSHIFT)) {
+        char* clipboard_text = SDL_GetClipboardText();
+        paste_text(clipboard_text);
+        delete clipboard_text;
+    } else if (keys == SDLK_c && (mods & KMOD_CTRL) && (mods & KMOD_LSHIFT)) {
+        copy_selected_text();
+    } else if (keys == SDLK_l && (mods & KMOD_CTRL)) {
+        clear_text();
+    } else if (keys == SDLK_BACKSPACE) {
+        erase_character();
+    } else if (keys == SDLK_LEFT || keys == SDLK_RIGHT || keys == SDLK_UP || keys == SDLK_DOWN) {
+        on_arrowkey_pressed(keys);
+    } else if (keys == SDLK_h && mods & KMOD_CTRL) {
+        on_backspace();
+    } else if (keys == SDLK_c && mods & KMOD_CTRL) {
+        send_sigint();
+    } else if (keys == SDLK_z && mods & KMOD_CTRL) {
+        send_sigsusp();
+    } else if (keys == SDLK_d && mods & KMOD_CTRL) {
+        send_eof();
+    } else if (keys == SDLK_r && mods & KMOD_CTRL) {
+        reverse_find();
+    } else if (keys == SDLK_a && mods & KMOD_CTRL) {
+        cursor_to_back();
+    } else if (keys == SDLK_e && mods & KMOD_CTRL) {
+        cursor_to_end();
     }
 }
 
 void Application::on_textinput_event(const char* sym) {
     write(master_fd_, sym, SDL_strlen(sym));
-    // std::cout << sym << std::endl;;
-    window_->set_should_render(true);
 }
-void Application::on_enter_pressed_event() {
+void Application::send_newline() {
     write(master_fd_, "\n", 1);
-    window_->set_should_render(true);
 }
 
-void Application::on_ctrl_z_pressed() {
+void Application::send_sigsusp() {
     const char sigsusp = 0x1A;
     write(master_fd_, &sigsusp, 1);
 }
 
-void Application::on_ctrl_c_pressed() {
+void Application::send_sigint() {
     const char sigint = 0x03;
     write(master_fd_, &sigint, 1); // SIGINT send
 }
@@ -186,43 +211,43 @@ void Application::on_arrowkey_pressed(SDL_Keycode sym) {
 void Application::on_quit_event() {
     is_running_ = false;
 }
-void Application::on_backspace_pressed_event() {
+void Application::erase_character() {
     const char backspace = 0x7F;
     write(master_fd_, &backspace, 1);
 }
-void Application::on_ctrl_h_pressed() {
+void Application::on_backspace() {
     const char backspace = 0x08;
     write(master_fd_, &backspace, 1);
 }
 
-void Application::on_ctrl_d_pressed() {
+void Application::send_eof() {
     const char eof = 0x04;
     write(master_fd_, &eof, 1);
 }
 
-void Application::on_ctrl_l_pressed() { // Clearing screen
+void Application::clear_text() { // Clearing screen
     const char clear = 0x0C;
     write(master_fd_, &clear, 1);
 }
 
-void Application::on_ctrl_r_pressed() {
+void Application::reverse_find() {
     const char rev_find = 0x12;
     write(master_fd_, &rev_find, 1);
 }
 
-void Application::on_ctrl_a_pressed() {
+void Application::cursor_to_back() {
     const char cursor_to_the_back = 0x01;
     write(master_fd_, &cursor_to_the_back, 1);
 }
 
-void Application::on_ctrl_e_pressed() {
+void Application::cursor_to_end() {
     const char cursor_to_the_end = 0x05;
     write(master_fd_, &cursor_to_the_end, 1);
 }
 
 void Application::on_erase_event() {
     buffer_->erase_last_symbol();
-    window_->set_should_render(true);
+    // window_->set_shoulda_render(true);
 }
 void Application::on_scroll_event(Sint32 scroll_dir) {
     window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
@@ -238,12 +263,12 @@ void Application::on_move_cursor(int row, int col) {
 }
 
 
-void Application::on_add_cells(std::vector<Cell> cells) {
+void Application::on_add_cells(std::vector<Cell>&& cells) {
     buffer_->add_cells(std::move(cells));
 }
 
-void Application::on_paste_event(std::string content) {
-    on_textinput_event(content.c_str());
+void Application::paste_text(const char* text) {
+    on_textinput_event(text);
 }
 void Application::on_reset_cursor(bool x_dir, bool y_dir) {
     buffer_->reset_cursor(x_dir, y_dir);
@@ -277,6 +302,7 @@ void Application::on_delete_chars(int n) {
 }
 
 void Application::on_selection(int start_x, int start_y, int end_x, int end_y) {
+    on_remove_selection();
     buffer_->set_selection(start_x, start_y, end_x, end_y, window_->get_scroll_offset());
     window_->set_should_render(true);
 }
@@ -284,7 +310,7 @@ void Application::on_remove_selection() {
     buffer_->remove_selection();
 }
 
-void Application::on_copy_selection() {
+void Application::copy_selected_text() {
     auto text = buffer_->get_selected_text();
     SDL_SetClipboardText(text.c_str());
 }
@@ -293,7 +319,15 @@ void Application::on_window_resized() {
     window_->resize();
     auto win_size = window_->get_window_size();
     auto font_size = window_->get_font_size();
+
+    winsize wins;
+    wins.ws_col = win_size.first / font_size.first - 1;
+    wins.ws_row = 10;
+    ioctl(master_fd_, TIOCSWINSZ, &wins);
+    
     buffer_->resize(win_size, font_size);
+
+    // Update winsize somewhere
     
     window_->set_should_render(true);
 }

@@ -15,22 +15,6 @@ AnsiParser::AnsiParser(Application& app) : application(app) {
 }
 
 
-void AnsiParser::parse_input(const std::string& text) {
-    std::vector<Cell> cells;
-    auto it = text.begin();
-    while (it != text.end()) {
-        Cell cell = current_cell;
-        uint32_t codepoint = utf8::next(it, text.end());
-        cell.codepoint = codepoint;
-        cells.push_back(cell);
-    }
-
-    if (!cells.empty()) {
-        // on user_input
-        application.on_add_cells(std::move(cells));
-    }
-}
-
 void AnsiParser::parse(const std::string& text) {
     std::string::const_iterator it = text.begin();
     while (it != text.end()) {
@@ -74,7 +58,7 @@ void AnsiParser::parse(const std::string& text) {
                     if (it != text.end()) {
                         char command = *it++;
                         // std::cout << "CSI sequence: " << csi_sequence << ", command: " << command << std::endl;
-                        handleCSI(command, parseParams(csi_sequence));
+                        handle_CSI(command, parse_params(csi_sequence));
                     }
                     state = GeneralState::TEXT;
                 } else if (c == ']') { // Handle OSC sequences
@@ -100,7 +84,7 @@ void AnsiParser::parse(const std::string& text) {
     }
 }
 
-std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
+std::vector<int> AnsiParser::parse_params(const std::string& csi_sequence) {
     std::vector<int> params;
     std::istringstream iss(csi_sequence);
     std::string param;
@@ -127,7 +111,7 @@ std::vector<int> AnsiParser::parseParams(const std::string& csi_sequence) {
 }
 
 
-void AnsiParser::handleCSI(char command, std::vector<int> params) {
+void AnsiParser::handle_CSI(char command, std::vector<int> params) {
     static const SDL_Color color_map[8] = {
         {0, 0, 0, 255},       // Black
         {255, 0, 0, 255},     // Red
@@ -142,7 +126,6 @@ void AnsiParser::handleCSI(char command, std::vector<int> params) {
     if (command == 'm') { // Select Graphic Rendition (SGR)
         if (params.empty()) params.push_back(0);
         for (int param : params) {
-            std::cout << param << std::endl;
             if (param == 0) { // Reset
                 current_cell.fg_color = {200, 200, 200, 255};
                 current_cell.bg_color = {0, 0, 0, 255};
@@ -180,11 +163,9 @@ void AnsiParser::handleCSI(char command, std::vector<int> params) {
     } else if (command == 'J' && params.size() >= 1) {
         application.on_clear_requested(params[0] == 3); // Clear screen
     } else if (command == 'A') { // Cursor up
-        std::cout << "up\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(-n, 0);
     } else if (command == 'B') { // Cursor down
-        std::cout << "down\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(n, 0);
     } else if (command == 'C') { // Cursor forward
@@ -192,7 +173,6 @@ void AnsiParser::handleCSI(char command, std::vector<int> params) {
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(0, n);
     } else if (command == 'D') { // Cursor backward
-        std::cout << "backward\n";
         int n = params.size() >= 1 ? params[0] : 1;
         application.on_move_cursor(0, -n);
     } else if (command == 'K') {
