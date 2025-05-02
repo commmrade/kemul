@@ -86,6 +86,5 @@ SDL_Rect GlyphCache::get_or_create_glyph_pos(SDL_Renderer* renderer, TTF_Font* f
         return iter->second;
     }
     auto rect = add_glyph(renderer, font, codepoint);
-    std::cout << (char)codepoint << std::endl;
     return rect;
 }
