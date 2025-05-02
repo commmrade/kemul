@@ -19,11 +19,13 @@ private:
     int atlas_y_{0};
 
     std::unordered_map<uint32_t, SDL_Rect> glyph_positions_;
+
+    void reset_atlas(SDL_Renderer* renderer);
 public:
     explicit GlyphCache(SDL_Renderer* renderer, TTF_Font* font, std::pair<int, int> max_dimensions);
     ~GlyphCache();
 
-    void add_glyph(SDL_Renderer* renderer, TTF_Font* font, uint32_t codepoint);
+    SDL_Rect add_glyph(SDL_Renderer* renderer, TTF_Font* font, uint32_t codepoint);
 
     bool glyph_exists(uint32_t codepoint);
     std::optional<SDL_Rect> get_glyph_pos(uint32_t codepoint);
