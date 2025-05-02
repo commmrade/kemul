@@ -4,6 +4,7 @@
 #include "Window.hpp"
 #include <SDL_clipboard.h>
 #include <array>
+#include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <fcntl.h>
@@ -56,10 +57,9 @@ Application::~Application() {
 
 
 void Application::load_config() {
-    auto binary_path = std::array<char, 1024>{};
-    int length = readlink("/proc/self/exe", binary_path.data(), binary_path.size());
-    auto binary_path_str = std::string(binary_path.data(), length);
-    auto config_path = std::filesystem::path(binary_path_str).parent_path() / "config.cock";
+    auto appdata_dir = std::filesystem::path(std::getenv("HOME")) / ".local/share/kemul";
+    auto config_path = appdata_dir / "config.cock";
+
     std::ifstream file{config_path};
     if (!file.is_open()) {
         std::cerr << "No config file located" << std::endl;

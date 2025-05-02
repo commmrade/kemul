@@ -16,35 +16,6 @@ void EventHandler::handle_event(SDL_Event& event) {
         }
         case SDL_KEYDOWN: {
             application.on_keys_pressed(event.key.keysym.mod, event.key.keysym.sym);
-            // if (event.key.keysym.sym == SDLK_RETURN) {
-            //     application.on_enter_pressed_event();
-            // } else if (event.key.keysym.sym == SDLK_v && (event.key.keysym.mod & KMOD_CTRL) && (event.key.keysym.mod & KMOD_LSHIFT)) {
-            //     char* clipboard_text = SDL_GetClipboardText();
-            //     application.on_paste_event(clipboard_text);
-            //     delete clipboard_text;
-            // } else if (event.key.keysym.sym == SDLK_c && (event.key.keysym.mod & KMOD_CTRL) && (event.key.keysym.mod & KMOD_LSHIFT)) {
-            //     application.on_copy_selection();
-            // } else if (event.key.keysym.sym == SDLK_l && (event.key.keysym.mod & KMOD_CTRL)) {
-            //     application.on_ctrl_l_pressed();
-            // } else if (event.key.keysym.sym == SDLK_BACKSPACE) {
-            //     application.on_backspace_pressed_event();
-            // } else if (event.key.keysym.sym == SDLK_LEFT || event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) {
-            //     application.on_arrowkey_pressed(event.key.keysym.sym); // Done
-            // } else if (event.key.keysym.sym == SDLK_h && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_h_pressed(); 
-            // } else if (event.key.keysym.sym == SDLK_c && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_c_pressed(); 
-            // } else if (event.key.keysym.sym == SDLK_z && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_z_pressed();
-            // } else if (event.key.keysym.sym == SDLK_d && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_d_pressed(); 
-            // } else if (event.key.keysym.sym == SDLK_r && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_r_pressed(); // Done
-            // } else if (event.key.keysym.sym == SDLK_a && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_a_pressed();
-            // } else if (event.key.keysym.sym == SDLK_e && event.key.keysym.mod & KMOD_CTRL) {
-            //     application.on_ctrl_e_pressed();
-            // }
             break;
         }
         case SDL_MOUSEWHEEL: {

@@ -12,6 +12,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <array>
+#include <cstdlib>
+#include <filesystem>
 #include <string>
 #include <sys/poll.h>
 #include <sys/types.h>
@@ -27,6 +29,10 @@
 #include <unistd.h>
 
 int main(int argc, char** argv) {
+    auto appdata_path = std::filesystem::path(std::getenv("HOME")) / ".local/share/kemul";
+    if (!std::filesystem::exists(appdata_path)) {
+        std::filesystem::create_directory(appdata_path);
+    }
 
     Application app{"FiraCode-Regular.ttf"};
     app.run();
