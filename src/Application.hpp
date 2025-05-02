@@ -3,10 +3,13 @@
 #include <SDL_keyboard.h>
 #include <SDL_stdinc.h>
 #include <memory>
+#include <string>
 #include <sys/poll.h>
 #include <vector>
 #include "Window.hpp"
 #include "Buffer.hpp"
+#include "Config.hpp"
+
 
 class AnsiParser;
 class EventHandler;
@@ -28,10 +31,15 @@ private:
     std::unique_ptr<TermBuffer> buffer_;
     std::unique_ptr<EventHandler> event_handler_;
     std::unique_ptr<AnsiParser> parser_;
+
+    // Config stuff
+    Config config_;
 public:
-    explicit Application(const std::string &font_path, int width = 900, int height = 600);
+    explicit Application(const std::string &font_path);
     ~Application();
 
+
+    void load_config();
 
     void set_blocking_mode(bool enabled);
     void run();

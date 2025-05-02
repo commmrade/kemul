@@ -3,8 +3,14 @@
 #include "EventHandler.hpp"
 #include "Window.hpp"
 #include <SDL_clipboard.h>
+#include <array>
 #include <cstring>
+#include <exception>
 #include <fcntl.h>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <ios>
 #include <memory>
 #include <pty.h>
 #include <stdexcept>
@@ -20,30 +26,86 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <string>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 #include "ANSIParser.hpp"
 
-Application::Application(const std::string &font_path, int width, int height) {
+Application::Application(const std::string &font_path) {
     init_sdl();
     init_ttf();
+    load_config();
     
-    window_ = std::make_unique<Window>(font_path, width, height); // Setting up window before so we can get font size
+    window_ = std::make_unique<Window>(config_.font_path, config_.font_ptsize, config_.default_window_width, config_.default_window_height); // Setting up window before so we can get font size
     auto font_size = window_->get_font_size();
 
     // Setting up terminal stuff
-    setup_pty(false, width / font_size.first - 1);
+    setup_pty(false, config_.default_window_width / font_size.first - 1);
     set_blocking_mode(false);
 
     // Init other stuff
-    buffer_ = std::make_unique<TermBuffer>(width, height, font_size.first, font_size.second);
+    buffer_ = std::make_unique<TermBuffer>(config_.default_window_width, config_.default_window_height, font_size.first, font_size.second);
     event_handler_ = std::make_unique<EventHandler>(*this);
     parser_ = std::make_unique<AnsiParser>(*this);
 }
 Application::~Application() {
     close(master_fd_);
     close(slave_fd_);
+}
+
+
+void Application::load_config() {
+    auto binary_path = std::array<char, 1024>{};
+    int length = readlink("/proc/self/exe", binary_path.data(), binary_path.size());
+    auto binary_path_str = std::string(binary_path.data(), length);
+    auto binary_dir_str = std::filesystem::path(binary_path_str).parent_path().generic_string();
+    std::ifstream file{binary_dir_str + "/config.cock"};
+    if (!file.is_open()) {
+        std::cerr << "No config file located" << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (auto pos = line.find("="); pos != std::string::npos) {
+            auto name = std::string{line.substr(0, pos)};
+            auto value = std::string{line.substr(pos + 1)};
+            if (name == "fontSize") {
+                try {
+                    auto ptsize = std::stoi(value);
+                    if (ptsize <= 0) continue;
+                    config_.font_ptsize = ptsize;
+                } catch (const std::exception& ex) {
+                    std::cerr << ex.what() << std::endl;
+                }
+            } else if (name == "fontPath") {
+                if (!std::filesystem::exists(value)) {
+                    std::cerr << "Such font doesn't exist" << std::endl;
+                    continue;
+                }
+                config_.font_path = std::move(value);
+            } else if (name == "defaultWindowWidth") {
+                try {
+                    auto width = std::stoi(value);
+                    if (width <= 0) continue;
+                    config_.default_window_width = width;
+                } catch (const std::exception& ex) {
+                    std::cerr << ex.what() << std::endl;
+                }
+            } else if (name == "defaultWindowHeight") {
+                try {
+                    auto height = std::stoi(value);
+                    if (height <= 0) continue;
+                    config_.default_window_height = height;
+                } catch (const std::exception& ex) {
+                    std::cerr << ex.what() << std::endl;
+                }
+            }
+        } else {
+            continue;
+        }
+    }
 }
 
 void Application::init_sdl() {

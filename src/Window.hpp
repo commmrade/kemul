@@ -19,7 +19,6 @@
 #include "GlyphCache.hpp"
 #include <unicode/uchar.h>
 
-constexpr int FONT_PTSIZE = 16;
 // echo -e "\033[48;5;2m Test Backgroundsdasd \033[0m"
 
 // inline int cell_width(uint32_t codepoint) {
@@ -41,6 +40,7 @@ struct CursorPos {
 class Window {
 private:
     int width_; int height_;
+    int font_ptsize_;
     // Helper stuff
     uint scroll_offset_{0};
     CursorPos cursor_pos_;
@@ -63,7 +63,7 @@ private:
     std::unique_ptr<GlyphCache> glyph_cache_;
 public:
     TTF_Font* font_{nullptr}; // temp
-    explicit Window(const std::string& font_path, int width, int height);
+    explicit Window(const std::string& font_path, int font_ptsize, int width, int height);
     ~Window();
 
     void draw(const TermBuffer& term_buffer);

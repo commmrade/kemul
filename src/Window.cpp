@@ -25,7 +25,7 @@
 #include "Color.hpp"
 
 
-Window::Window(const std::string& font_path, int width, int height) : width_(width), height_(height) {
+Window::Window(const std::string& font_path, int font_ptsize, int width, int height) : font_ptsize_(font_ptsize), width_(width), height_(height) {
     std::cout << "Creating window\n";
     init();
     load_font(font_path);
@@ -52,7 +52,7 @@ std::pair<int, int> Window::get_font_size() const {
 
 void Window::init() {
     std::cout << "Creating SDL_Window\n";
-    window_ = SDL_CreateWindow("Kemul", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 900, 600, SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+    window_ = SDL_CreateWindow("Kemul", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width_, height_, SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     if (!window_) {
         throw std::runtime_error(std::string{"Could not create window: "} + SDL_GetError());
     }
@@ -65,7 +65,7 @@ void Window::init() {
 }
 
 void Window::load_font(const std::string& font_path) {
-    font_ = TTF_OpenFont(font_path.c_str(), FONT_PTSIZE);
+    font_ = TTF_OpenFont(font_path.c_str(), font_ptsize_);
     if (!font_) {
         throw std::runtime_error(std::string{"Could not load a font: "} + TTF_GetError());
     }
