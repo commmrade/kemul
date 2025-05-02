@@ -17,10 +17,6 @@ GlyphCache::~GlyphCache() {
 }
 
 SDL_Rect GlyphCache::add_glyph(SDL_Renderer* renderer, TTF_Font* font, uint32_t codepoint) {
-    if (atlas_y_ + TTF_FontHeight(font) > max_height_) {
-        reset_atlas(renderer);
-    }
-
     std::string utf8_char = utf8::utf32to8(std::u32string{codepoint});
     SDL_Surface* glyph_surf = TTF_RenderUTF8_Blended(font, utf8_char.c_str(), SDL_Color{255, 255, 255, 255});
     if (!glyph_surf) {
@@ -42,6 +38,10 @@ SDL_Rect GlyphCache::add_glyph(SDL_Renderer* renderer, TTF_Font* font, uint32_t 
         atlas_x_ = 0;
     }
 
+    if (atlas_y_ + TTF_FontHeight(font) > max_height_) {
+        reset_atlas(renderer);
+    }
+
     SDL_Rect dest_rect = {atlas_x_, atlas_y_, glyph_surf->w, glyph_surf->h};
     SDL_SetRenderTarget(renderer, atlas_texture_);
     SDL_RenderCopy(renderer, glyph_texture, NULL, &dest_rect);
@@ -52,7 +52,6 @@ SDL_Rect GlyphCache::add_glyph(SDL_Renderer* renderer, TTF_Font* font, uint32_t 
 
     SDL_DestroyTexture(glyph_texture);
     SDL_FreeSurface(glyph_surf);
-    std::cout << atlas_x_ << " " << atlas_y_ << std::endl;
     return dest_rect;
 }
 
