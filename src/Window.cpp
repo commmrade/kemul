@@ -129,7 +129,7 @@ void Window::draw(const TermBuffer& term_buffer) {
     
     auto [cursor_x, cursor_y] = term_buffer.get_cursor_pos();
     const auto& row = buffer[cursor_y];
-    SDL_Rect cursor_rect{cursor_x * font_size.first + font_size.first, (cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, 10, font_size.second};
+    SDL_Rect cursor_rect{cursor_x * font_size.first + font_size.first, (cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, font_size.first, font_size.second};
     SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer_, &cursor_rect);    
 

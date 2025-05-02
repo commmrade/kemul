@@ -59,8 +59,8 @@ void Application::load_config() {
     auto binary_path = std::array<char, 1024>{};
     int length = readlink("/proc/self/exe", binary_path.data(), binary_path.size());
     auto binary_path_str = std::string(binary_path.data(), length);
-    auto binary_dir_str = std::filesystem::path(binary_path_str).parent_path().generic_string();
-    std::ifstream file{binary_dir_str + "/config.cock"};
+    auto config_path = std::filesystem::path(binary_path_str).parent_path() / "config.cock";
+    std::ifstream file{config_path};
     if (!file.is_open()) {
         std::cerr << "No config file located" << std::endl;
         return;
