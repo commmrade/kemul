@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fcntl.h>
 #include <filesystem>
 #include <memory>
@@ -85,11 +86,13 @@ void Window::draw(const TermBuffer& term_buffer) {
     SDL_RenderClear(renderer_);
 
     decltype(auto) buffer = term_buffer.get_buffer();
+
+    auto* atlas = glyph_cache_->atlas();
     auto render_limit = get_window_size().second / font_size.second;
-    for (auto i = scroll_offset_; i < (scroll_offset_ + render_limit > buffer.size() ? buffer.size() : scroll_offset_ + render_limit); ++i) {
+    for (auto i = scroll_offset_; i < std::min((int)scroll_offset_ + render_limit, (int)buffer.size()); ++i) {
         for (auto cell : buffer[i]) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
-            auto* atlas = glyph_cache_->atlas();
+            
             
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, font_, cell.codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
