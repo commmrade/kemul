@@ -49,6 +49,7 @@ private:
     int8_t scroll_step_{2};
 
     bool is_running_{true};
+    bool is_scrolling_{false};
     bool should_render_{true};
 
     // Smth else like glyph cache
@@ -61,6 +62,7 @@ private:
     
 
     std::unique_ptr<GlyphCache> glyph_cache_;
+
 public:
     TTF_Font* font_{nullptr}; // temp
     explicit Window(const std::string& font_path, int font_ptsize, int width, int height);
