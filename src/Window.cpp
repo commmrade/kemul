@@ -88,17 +88,15 @@ void Window::draw(const TermBuffer& term_buffer) {
     decltype(auto) buffer = term_buffer.get_buffer();
 
     auto* atlas = glyph_cache_->atlas();
+    
     auto render_limit = get_window_size().second / font_size.second - 1;
-
     auto [t_cursor_x, t_cursor_y] = term_buffer.get_cursor_pos();
-    std::cout << scroll_offset_ << " " << t_cursor_y -render_limit << std::endl; 
     if (t_cursor_y > scroll_offset_ + render_limit - 1 && !is_scrolling_) {
         scroll_offset_ += t_cursor_y - (scroll_offset_ + render_limit) + 1;
     }
     for (auto i = scroll_offset_; i < std::min((int)scroll_offset_ + render_limit, (int)buffer.size()); ++i) {
         for (auto cell : buffer[i]) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
-            
             
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, font_, cell.codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
@@ -134,8 +132,6 @@ void Window::draw(const TermBuffer& term_buffer) {
     }
 
     
-    
-    const auto& row = buffer[t_cursor_y];
     SDL_Rect cursor_rect{t_cursor_x * font_size.first + font_size.first, (t_cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, font_size.first, font_size.second};
     SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer_, &cursor_rect);    
