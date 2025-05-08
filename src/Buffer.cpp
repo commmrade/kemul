@@ -406,11 +406,9 @@ void TermBuffer::grow_cols(int n, bool reflow) {
             // choose last row size, on the other hand, width - row.size means how many cells we can reflow at all, if last row size is too big, choose this
 
             // "Spliting front off" last_row
+            std::cout << can_take_n << " " << last_row.size() << "\n";
             row.insert(row.end(), last_row.begin(), last_row.begin() + can_take_n);
-            for (auto i = 0; i < can_take_n; ++i) { // Temporary solution for erase giving a segfault
-                last_row[i].clear();
-            }
-            // last_row.erase(last_row.begin(), last_row.begin() + can_take_n); // Causes segfault
+            last_row.erase(last_row.begin(), last_row.begin() + can_take_n); // Causes segfault
             if (last_row.empty() || std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
                 reversed.pop_back(); // We don't need empty line, so just pop it
                 ++cursor_delta;
