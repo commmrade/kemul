@@ -37,7 +37,7 @@ Application::Application(const std::string &font_path) {
     init_sdl();
     init_ttf();
     load_config();
-    
+
     window_ = std::make_unique<Window>(config_.font_path, config_.font_ptsize, config_.default_window_width, config_.default_window_height); // Setting up window before so we can get font size
     auto font_size = window_->get_font_size();
 
@@ -126,7 +126,7 @@ void Application::setup_pty(bool echo, int cols) {
     ws.ws_col = cols;
     ws.ws_row = 10;
     int slave_id = forkpty(&master_fd_, slave_name, NULL, &ws);
-    
+
     if (slave_id < 0) {
         throw std::runtime_error("Could not fork properly");
     } else if (slave_id == 0) {
@@ -138,7 +138,7 @@ void Application::setup_pty(bool echo, int cols) {
     if (slave_fd_ < 0) {
         throw std::runtime_error("Failed to open slave pty");
     }
-   
+
     termios term_attribs;
     if (tcgetattr(slave_fd_, &term_attribs) != 0) {
         throw std::runtime_error("Failed to get terminal attributes");
@@ -148,7 +148,7 @@ void Application::setup_pty(bool echo, int cols) {
     if (tcsetattr(slave_fd_, TCSANOW, &term_attribs) != 0) {
         throw std::runtime_error("Failed to set terminal attributes");
     }
-    
+
     fds_[0].fd = master_fd_;
     fds_[0].events |= POLLIN;
 }
@@ -267,7 +267,7 @@ void Application::on_arrowkey_pressed(SDL_Keycode sym) {
             write(master_fd_, "\033[D", 3);
             break;
         }
-    }    
+    }
 }
 
 void Application::on_quit_event() {
@@ -345,7 +345,7 @@ void Application::on_clear_requested(bool remove) {
         buffer_->set_cursor_position(buffer_->get_max_y() + 1, x);
         window_->set_scroll_offset(buffer_->get_max_y());
     }
-    
+
     window_->set_should_render(true);
 }
 
@@ -383,13 +383,14 @@ void Application::on_window_resized() {
     auto font_size = window_->get_font_size();
 
     winsize wins;
-    wins.ws_col = win_size.first / font_size.first - 1;
-    wins.ws_row = 10;
+    wins.ws_col = win_size.first / font_size.first;
+    // std::cout << wins.ws_col << std::endl;
+    wins.ws_row = 20;
     ioctl(master_fd_, TIOCSWINSZ, &wins);
-    
+
     buffer_->resize(win_size, font_size);
 
     // Update winsize somewhere
-    
+
     window_->set_should_render(true);
 }
