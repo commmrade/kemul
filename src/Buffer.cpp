@@ -420,6 +420,9 @@ void TermBuffer::grow_cols(int n, bool reflow) {
                 ++cursor_delta;
                 --max_pos_y_; // So scrolling  isnt fucked
             } else {
+                if (next_row.back().codepoint == 0) {
+                    std::cout << "heh" << std::endl;
+                }
                 next_row.back().set_wrapline(); // If there are cells left, line is still wrapped, so set this flag again
             }
         }
