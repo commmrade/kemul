@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <unicode/uchar.h>
+#include "Cell.hpp"
 
 inline int cell_width(uint32_t codepoint) {
     if (codepoint == 0) return 1;
@@ -22,63 +23,14 @@ inline int cell_width(uint32_t codepoint) {
 // 0000 0000 0000 1000 - wrapline
 
 
-struct Cell {
-    uint32_t codepoint;
-    SDL_Color fg_color{200, 200, 200, 255};
-    SDL_Color bg_color{0, 0, 0, 255};
-    uint16_t flags{0}; // Underline, bold, etc
 
-    void set_underline(bool value = true) {
-        if (!value) {
-            flags &= ~0b0000'0000'0000'0001;
-            return;
-        }
-        flags |= 0b0000'0000'0000'0001;
-    }
-    bool is_underline() const {
-        return flags & 0b0000'0000'0000'0001;
-    }
-
-    void set_bold(bool value = true) {
-        if (!value) {
-            flags &= ~0b0000'0000'0000'0010;
-            return;
-        }
-        flags |= 0b0000'0000'0000'0010;
-    }
-    bool is_bold() const {
-        return flags & 0b0000'0000'0000'0010;
-    }
-
-    void set_strikethrough(bool value = true) {
-        if (!value) {
-            flags &= ~0b0000'0000'0000'0100;
-            return;
-        }
-        flags |= 0b0000'0000'0000'0100;
-    }
-    bool is_strikethrough() const {
-        return flags & 0b0000'0000'0000'0100;
-    }
-
-    void set_wrapline(bool value = true) {
-        if (!value) {
-            flags &= ~0b0000'0000'0000'1000;
-            return;
-        }
-        flags |= 0b0000'0000'0000'1000;
-    }
-    bool is_wrapline() const {
-        return flags & 0b0000'0000'0000'1000;
-    }
-};
 
 class TermBuffer {
 private:
     std::vector<std::vector<Cell>> buffer_;
     int cursor_x_{0};
     int cursor_y_{0};
-    int max_pos_y_{1};
+    int max_pos_y_{0};
 
     int width_cells_;
     int height_cells_;
@@ -91,6 +43,7 @@ private:
 
 
 public:
+    TermBuffer() = delete;
     explicit TermBuffer(int width, int height, int cell_width, int cell_height);
     ~TermBuffer();
 

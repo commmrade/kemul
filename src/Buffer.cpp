@@ -68,9 +68,7 @@ void TermBuffer::add_cells(std::vector<Cell>&& cells) {
             reset_cursor(true, false);
             continue;
         }
-
         buffer_[cursor_y_][cursor_x_] = std::move(cell);
-        
         cursor_x_ += 1;
         if (cursor_x_ >= width_cells_) {
             // Set wrapline flag for the last symbol
@@ -404,13 +402,15 @@ void TermBuffer::grow_cols(int n, bool reflow) {
 
             auto& last_row = reversed.back();
 
-            auto can_take_n = std::min(last_row.size(), width_cells_ - row.size()); // So we can at most take last_row.size() elements so if width - row.size is a too much 
+            int can_take_n = std::min((int)last_row.size(), width_cells_ - (int)row.size()); // So we can at most take last_row.size() elements so if width - row.size is a too much
             // choose last row size, on the other hand, width - row.size means how many cells we can reflow at all, if last row size is too big, choose this
-            
+
             // "Spliting front off" last_row
             row.insert(row.end(), last_row.begin(), last_row.begin() + can_take_n);
-            last_row.erase(last_row.begin(), last_row.begin() + can_take_n); // Causes segfault
-
+            for (auto i = 0; i < can_take_n; ++i) { // Temporary solution for erase giving a segfault
+                last_row[i].clear();
+            }
+            // last_row.erase(last_row.begin(), last_row.begin() + can_take_n); // Causes segfault
             if (last_row.empty() || std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
                 reversed.pop_back(); // We don't need empty line, so just pop it
                 ++cursor_delta;
@@ -422,7 +422,9 @@ void TermBuffer::grow_cols(int n, bool reflow) {
         row.resize(width_cells_); // Make sure its correct size
         reversed.push_back(std::move(row));
     }
+    // std::cout << "here" << reversed.size() << std::endl;
 
+    buffer_.clear();
     buffer_.assign(reversed.rbegin(), reversed.rend()); // Reversing reversed buffer
     if (buffer_.size() < height_cells_) {
         expand_down(height_cells_ - buffer_.size());
@@ -444,7 +446,7 @@ void TermBuffer::shrink_cols(int n, bool reflow) {
     };
 
     std::vector<std::vector<Cell>> new_buffer;
-    std::vector<Cell> carry; 
+    std::vector<Cell> carry;
 
     for (auto it = buffer_.begin(), end = buffer_.end(); it != end; ++it) {
         auto row = *it;
