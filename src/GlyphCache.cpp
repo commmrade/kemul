@@ -62,12 +62,6 @@ void GlyphCache::reset_atlas(SDL_Renderer* renderer) {
     glyph_positions_.clear();
     atlas_x_ = 0;
     atlas_y_ = 0;
-    
-
-    // SDL_SetRenderTarget(renderer, atlas_texture_);
-    // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0); // transparent black
-    // SDL_RenderClear(renderer);
-    // SDL_SetRenderTarget(renderer, NULL);
 }
 
 bool GlyphCache::glyph_exists(uint32_t codepoint) {

@@ -81,7 +81,7 @@ public:
     void set_scroll_offset(int n) {
         scroll_offset_ = n;
     }
-    const int get_scroll_offset() const {
+    int get_scroll_offset() const {
         return scroll_offset_;
     }
 

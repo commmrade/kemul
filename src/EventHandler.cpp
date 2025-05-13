@@ -34,15 +34,15 @@ void EventHandler::handle_event(SDL_Event& event) {
                 mouse_end_x = mouse_x;
                 mouse_end_y = mouse_y;
 
-                if (mouse_start_x < 0 || mouse_start_y < 0 || mouse_end_x < 0 || mouse_end_y < 0) return;
+                if (mouse_start_x <= 0 || mouse_start_y <= 0 || mouse_end_x <= 0 || mouse_end_y <= 0) return;
                 application.on_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y);
             }
             break;
         }
         case SDL_MOUSEBUTTONDOWN: {
+            application.on_remove_selection();
             mouse_start_x = mouse_x;
             mouse_start_y = mouse_y;
-            application.on_remove_selection();
             break;
         }
         case SDL_MOUSEBUTTONUP: {

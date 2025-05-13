@@ -370,6 +370,7 @@ void Application::on_selection(int start_x, int start_y, int end_x, int end_y) {
 }
 void Application::on_remove_selection() {
     buffer_->remove_selection();
+    window_->set_should_render(true);
 }
 
 void Application::copy_selected_text() {

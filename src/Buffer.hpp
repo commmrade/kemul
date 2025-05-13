@@ -41,7 +41,13 @@ private:
     std::pair<int, int> mouse_start_cell{-1, -1};
     std::pair<int, int> mouse_end_cell{-1, -1};
 
+    void grow_lines(int n);
+    void shrink_lines(int n);
 
+    void grow_cols(int n);
+    void shrink_cols(int n);
+
+    void iterate_mouse_selection();
 public:
     TermBuffer() = delete;
     explicit TermBuffer(int width, int height, int cell_width, int cell_height);
@@ -69,13 +75,7 @@ public:
 
     // Resize stuff
     void resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size);
-    void grow_lines(int n);
-    void shrink_lines(int n);
-
-    void grow_cols(int n, bool reflow);
-    void shrink_cols(int n, bool reflow);
-
-
+    
     // Mouse selection methods
     void set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset); // Invert colors to signal 'selection'
     void remove_selection(); // Unset mouse selection vaiables and undo 
@@ -88,7 +88,7 @@ public:
     const std::pair<int, int> get_cursor_pos() const {
         return {cursor_x_, cursor_y_};
     }
-    const int get_max_y() const {
+    int get_max_y() const {
         return max_pos_y_;
     }
 };

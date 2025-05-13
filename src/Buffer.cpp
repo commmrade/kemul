@@ -103,7 +103,7 @@ void TermBuffer::expand_down(int n) {
 
 
 void TermBuffer::erase_in_line(int mode) {
-    if (cursor_y_ >= buffer_.size()) return;
+    if (cursor_y_ >= (int)buffer_.size()) return;
 
     int start = 0;
     int end = width_cells_;
@@ -112,7 +112,6 @@ void TermBuffer::erase_in_line(int mode) {
         start = cursor_x_;
     } else if (mode == 1) { // from start to cursor
         end = cursor_x_ + 1;
-        std::cout << "heh\n";
     } else if (mode == 2) { // whole line
         start = 0;
         end = width_cells_;
@@ -159,37 +158,10 @@ void TermBuffer::delete_chars(int n) {
     }
 }
 
-void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset) {
-    if (start_y <= end_y) {
-        mouse_start_cell.first = start_x / cell_size_.first;
-        mouse_start_cell.second = start_y / cell_size_.second;
-
-        mouse_end_cell.first = end_x / cell_size_.first;
-        mouse_end_cell.second = end_y / cell_size_.second;
-    } else if (start_y > end_y) {
-        mouse_start_cell.first = end_x / cell_size_.first;
-        mouse_start_cell.second = end_y / cell_size_.second;
-
-        mouse_end_cell.first = start_x / cell_size_.first;
-        mouse_end_cell.second = start_y / cell_size_.second;
-    }
-
-    if (mouse_start_cell.second >= height_cells_) {
-        mouse_start_cell.first = -1; mouse_start_cell.second = -1;
-        mouse_end_cell.first = -1; mouse_end_cell.second = -1;
-        return;
-    }
-
-    // Counting offset
-    mouse_start_cell.second += scroll_offset;
-    mouse_end_cell.second += scroll_offset;
-
-    // No need to check start_cell.y because if (mouse_start_cell.second >= height_cells_) It cant be more than height_cells_ - 1
-    mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_ - 1);
-
+void TermBuffer::iterate_mouse_selection() {
     if (mouse_start_cell.second == mouse_end_cell.second) {
         // Selection on the same line
-        int x_start;
+        int x_start = 0;
         int x_end;
         if (mouse_start_cell.first <= mouse_end_cell.first) {
             x_start = mouse_start_cell.first;
@@ -232,60 +204,41 @@ void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, i
     } while (i <= mouse_end_cell.second);
 }
 
+void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset) {
+    if (start_y <= end_y) {
+        mouse_start_cell.first = start_x / cell_size_.first;
+        mouse_start_cell.second = start_y / cell_size_.second;
+
+        mouse_end_cell.first = end_x / cell_size_.first;
+        mouse_end_cell.second = end_y / cell_size_.second;
+    } else if (start_y > end_y) {
+        mouse_start_cell.first = end_x / cell_size_.first;
+        mouse_start_cell.second = end_y / cell_size_.second;
+
+        mouse_end_cell.first = start_x / cell_size_.first;
+        mouse_end_cell.second = start_y / cell_size_.second;
+    }
+    if (mouse_start_cell.second >= height_cells_) {
+        mouse_start_cell.first = -1; mouse_start_cell.second = -1;
+        mouse_end_cell.first = -1; mouse_end_cell.second = -1;
+        return;
+    }
+
+    // Counting offset
+    mouse_start_cell.second += scroll_offset;
+    mouse_end_cell.second += scroll_offset;
+    // No need to check start_cell.y because if (mouse_start_cell.second >= height_cells_) It cant be more than height_cells_ - 1
+    mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_ - 1);
+
+    iterate_mouse_selection();
+}
+
 void TermBuffer::remove_selection() {
     if (mouse_start_cell.first == -1 || mouse_start_cell.second == -1 || mouse_end_cell.first == -1 || mouse_end_cell.second == -1) {
         return;
     }
-
     mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_ - 1);
-
-    if (mouse_start_cell.second == mouse_end_cell.second) {
-        // Selection on the same line
-        int x_start;
-        int x_end;
-        if (mouse_start_cell.first <= mouse_end_cell.first) {
-            x_start = mouse_start_cell.first;
-            x_end = mouse_end_cell.first;
-        } else if (mouse_start_cell.first > mouse_end_cell.first) {
-            x_start = mouse_end_cell.first;
-            x_end = mouse_start_cell.first;
-        }
-        x_end = std::min(x_end, width_cells_ - 1);
-
-        for (auto j = x_start; j <= x_end; ++j) {
-            std::swap(buffer_[mouse_start_cell.second][j].fg_color, buffer_[mouse_start_cell.second][j].bg_color);
-        }
-        mouse_start_cell.first = -1;
-        mouse_start_cell.second = -1;
-        mouse_end_cell.first = -1;
-        mouse_end_cell.second = -1;
-        return;
-    }
-
-    auto i = mouse_start_cell.second;
-    do { // Iterating from start_cell.y up until end_cell.y
-
-        int x_start;
-        int x_end;
-
-        if (i == mouse_start_cell.second) {
-            x_start = mouse_start_cell.first;
-            x_end = width_cells_;
-        } else if (i == mouse_end_cell.second) {
-            x_start = 0;
-            x_end = mouse_end_cell.first;
-        } else {
-            x_start = 0;
-            x_end = width_cells_;
-        }
-
-        x_end = std::min(x_end, width_cells_ - 1);
-
-        for (auto j = x_start; j <= x_end; ++j) {
-            std::swap(buffer_[i][j].fg_color, buffer_[i][j].bg_color);
-        }
-        ++i;
-    } while (i <= mouse_end_cell.second);
+    iterate_mouse_selection();
 
     mouse_start_cell.first = -1;
     mouse_start_cell.second = -1;
@@ -301,7 +254,7 @@ std::string TermBuffer::get_selected_text() const {
 
     if (mouse_start_cell.second == mouse_end_cell.second) {
         // Selection on the same line
-        int x_start;
+        int x_start{0};
         int x_end;
         if (mouse_start_cell.first <= mouse_end_cell.first) {
             x_start = mouse_start_cell.first;
@@ -365,9 +318,9 @@ void TermBuffer::resize(std::pair<int, int> new_window_size, std::pair<int, int>
     }
 
     if (width_cells_ < new_width_cells) {
-        grow_cols(new_width_cells - width_cells_ + 1, true);
+        grow_cols(new_width_cells - width_cells_ + 1);
     } else if (width_cells_ > new_width_cells) {
-        shrink_cols(width_cells_ - new_width_cells, true);
+        shrink_cols(width_cells_ - new_width_cells);
     }
 }
 
@@ -381,25 +334,17 @@ void TermBuffer::shrink_lines(int n) {
     }
 }
 
-void TermBuffer::grow_cols(int n, bool reflow) {
-    auto old_width = width_cells_;
+void TermBuffer::grow_cols(int n) {
     width_cells_ += n;
 
-    auto should_reflow = [reflow, this](const std::vector<Cell>& row) {
-        auto length = row.size();
-        return reflow && !row.empty() && length < width_cells_ && row.back().is_wrapline();
+    auto should_reflow = [this](const std::vector<Cell>& row) {
+        auto length = (int)row.size();
+        return !row.empty() && length < width_cells_ && row.back().is_wrapline();
     }; // Check if you should reflow it at all, if there is a wrapline flag at the end of the row, it means it was carried-over so we should 'undo' it
-    auto row_length = [](const std::vector<Cell>& row) {
-        return std::count_if(row.begin(), row.end(), [](const Cell& cell) {
-            return cell.codepoint != 0;
-        }); // Real length of the row (kinda works so let it be)
-    };
 
     std::vector<std::vector<Cell>> reversed; // Buffer which tracks prev row
     reversed.reserve(height_cells_);
-
     int cursor_delta{0};
-
     for (auto it = buffer_.rbegin(), end = buffer_.rend(); it != end; ++it) {
         std::vector<Cell> next_row = *it; // Tracks cur row
 
@@ -410,7 +355,6 @@ void TermBuffer::grow_cols(int n, bool reflow) {
 
             int can_take_n = std::min((int)last_row.size(), width_cells_ - (int)next_row.size()); // So we can at most take last_row.size() elements so if width - row.size is a too much
             // choose last row size, on the other hand, width - row.size means how many cells we can reflow at all, if last row size is too big, choose this
-            std::cout << can_take_n << std::endl;
             // "Spliting front off" last_row
             next_row.insert(next_row.end(), last_row.begin(), last_row.begin() + can_take_n);
             last_row.erase(last_row.begin(), last_row.begin() + can_take_n); // Causes segfault
@@ -420,9 +364,6 @@ void TermBuffer::grow_cols(int n, bool reflow) {
                 ++cursor_delta;
                 --max_pos_y_; // So scrolling  isnt fucked
             } else {
-                if (next_row.back().codepoint == 0) {
-                    std::cout << "heh" << std::endl;
-                }
                 next_row.back().set_wrapline(); // If there are cells left, line is still wrapped, so set this flag again
             }
         }
@@ -432,18 +373,17 @@ void TermBuffer::grow_cols(int n, bool reflow) {
 
     buffer_.clear();
     buffer_.assign(reversed.rbegin(), reversed.rend()); // Reversing reversed buffer
-    if (buffer_.size() < height_cells_) {
+    if ((int)buffer_.size() < height_cells_) {
         expand_down(height_cells_ - buffer_.size());
     }
 
-    for (auto & row : buffer_) {
+    for (auto & row : buffer_) { // Since when we reflow we cut off reversed, size changed
         row.resize(width_cells_);
     }
-
     cursor_up(cursor_delta);
 }
 
-void TermBuffer::shrink_cols(int n, bool reflow) {
+void TermBuffer::shrink_cols(int n) {
     if (n >= width_cells_) {
         width_cells_ = 1;
     } else {
@@ -461,7 +401,6 @@ void TermBuffer::shrink_cols(int n, bool reflow) {
 
     for (auto it = buffer_.begin(), end = buffer_.end(); it != end; ++it) {
         auto row = *it;
-
         if (!carry.empty()) { // If there is some carry-over
             if (carry.back().is_wrapline()) {  // And there was wrapline on the last symbol
                 row.insert(row.begin(), carry.begin(), carry.end()); // Insert the carry-over into the current line
@@ -473,7 +412,6 @@ void TermBuffer::shrink_cols(int n, bool reflow) {
             }
             carry.clear(); // Clear carry-over
         }
-
         auto row_length_real = row_length(row); // Real length which counts only codepoints != 0
         if (row_length_real > width_cells_) {
             carry.assign(row.begin() + width_cells_, row.begin() + row_length_real); // Taking overend cells
@@ -489,7 +427,7 @@ void TermBuffer::shrink_cols(int n, bool reflow) {
 
     while (!carry.empty()) { // If there is carry left append it
         std::vector<Cell> new_row;
-        if (carry.size() > width_cells_) {
+        if ((int)carry.size() > width_cells_) {
             new_row.assign(carry.begin(), carry.begin() + width_cells_);
             carry.erase(carry.begin(), carry.begin() + width_cells_);
             if (!new_row.empty() && new_row.back().codepoint != 0) {
@@ -504,12 +442,7 @@ void TermBuffer::shrink_cols(int n, bool reflow) {
     }
 
     buffer_ = std::move(new_buffer);
-    if (buffer_.size() < height_cells_) {
+    if ((int)buffer_.size() < height_cells_) {
         expand_down(height_cells_ - buffer_.size());
     }
-
-    for (auto & row : buffer_) {
-        row.resize(width_cells_);
-    }
-
 }

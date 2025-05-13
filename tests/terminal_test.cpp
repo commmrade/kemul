@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <gtest/gtest.h>
 #include "../src/Buffer.hpp"
 #include <utility>
@@ -22,7 +23,7 @@ TEST_F(BufferTest, MaxYTestAfterAdding) {
 
 TEST_F(BufferTest, TestCursorPos) {
     auto width = buffer.get_buffer()[0].size();
-    for (auto i = 0; i < width; ++i) {
+    for (size_t i = 0; i < width; ++i) {
         buffer.add_cells({Cell{42}});
     }
     ASSERT_EQ(buffer.get_cursor_pos().first, 0);

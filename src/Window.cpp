@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <fcntl.h>
-#include <filesystem>
 #include <memory>
 #include <pty.h>
 #include <stdexcept>
@@ -21,13 +20,11 @@
 #include <unistd.h>
 #include "Window.hpp"
 #include "GlyphCache.hpp"
-#include <iostream>
 #include <utf8cpp/utf8.h>
 #include <utf8cpp/utf8/cpp11.h>
 #include "Color.hpp"
 
-
-Window::Window(const std::string& font_path, int font_ptsize, int width, int height) : font_ptsize_(font_ptsize), width_(width), height_(height) {
+Window::Window(const std::string& font_path, int font_ptsize, int width, int height) : width_(width), height_(height), font_ptsize_(font_ptsize) {
     init();
     load_font(font_path);
     
@@ -56,7 +53,6 @@ void Window::init() {
     if (!window_) {
         throw std::runtime_error(std::string{"Could not create window: "} + SDL_GetError());
     }
-    
     renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer_) {
         throw std::runtime_error(std::string{"Could not create renderer: "} + SDL_GetError());
@@ -85,16 +81,14 @@ void Window::draw(const TermBuffer& term_buffer) {
     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
     SDL_RenderClear(renderer_);
 
-    decltype(auto) buffer = term_buffer.get_buffer();
-
+    const auto& buffer = term_buffer.get_buffer();
     auto* atlas = glyph_cache_->atlas();
-    
     auto render_limit = get_window_size().second / font_size.second - 1;
     auto [t_cursor_x, t_cursor_y] = term_buffer.get_cursor_pos();
-    if (t_cursor_y > scroll_offset_ + render_limit - 1 && !is_scrolling_) {
+    if (t_cursor_y > (int)scroll_offset_ + render_limit - 1 && !is_scrolling_) {
         scroll_offset_ += t_cursor_y - (scroll_offset_ + render_limit) + 1;
     }
-    for (auto i = scroll_offset_; i < std::min((int)scroll_offset_ + render_limit, (int)buffer.size()); ++i) {
+    for (int i = scroll_offset_; i < std::min((int)scroll_offset_ + render_limit, (int)buffer.size()); ++i) {
         for (auto cell : buffer[i]) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
             
@@ -109,16 +103,13 @@ void Window::draw(const TermBuffer& term_buffer) {
                 SDL_RenderFillRect(renderer_, &glyph_rect);
                 SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
             }
-
             if (cell.is_underline()) {
                 SDL_SetRenderDrawColor(renderer_, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b, cell.fg_color.a);
                 SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h - src.h / 5, cursor_pos_.x + src.w, cursor_pos_.y + src.h - src.h / 5);
             }
-
             if (cell.is_bold()) {
                 SDL_SetTextureColorMod(atlas, 255, 255, 255);
             }
-
             if (cell.is_strikethrough()) {
                 SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
                 SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h / 2, cursor_pos_.x + src.w, cursor_pos_.y + src.h / 2);
@@ -131,11 +122,9 @@ void Window::draw(const TermBuffer& term_buffer) {
         cursor_pos_.y += font_size.second;
     }
 
-    
     SDL_Rect cursor_rect{t_cursor_x * font_size.first + font_size.first, (t_cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, font_size.first, font_size.second};
     SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
     SDL_RenderFillRect(renderer_, &cursor_rect);    
-
     SDL_RenderPresent(renderer_);
     should_render_ = false;
 }
@@ -148,7 +137,7 @@ void Window::scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y) {
         }
         scroll_offset_ += scroll_step_;
     } else if (dir > 0) {
-        if (scroll_offset_ >= scroll_step_) {
+        if ((int)scroll_offset_ >= scroll_step_) {
             scroll_offset_ -= scroll_step_;
             is_scrolling_ = true;
         }

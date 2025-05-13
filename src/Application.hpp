@@ -37,11 +37,7 @@ private:
 public:
     explicit Application(const std::string &font_path);
     ~Application();
-
-
-    void load_config();
-
-    void set_blocking_mode(bool enabled);
+    
     void run();
 
     // Keypress events and others (like window resize)
@@ -83,4 +79,6 @@ private:
     void init_ttf();
     void setup_pty(bool echo, int cols);
     void loop();
+    void load_config();
+    void set_blocking_mode(bool enabled);
 };
