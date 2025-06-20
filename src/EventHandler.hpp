@@ -3,7 +3,7 @@
 #include "Application.hpp"
 #include <functional>
 #include <unordered_map>
-
+#include <concepts>
 
 using SlotType = std::function<void(const SDL_Event&)>;
 class EventHandler {
@@ -15,9 +15,9 @@ public:
     // Mouse selection variables
     void handle_event(SDL_Event& event);
 
-    template <typename Function>
+    template <typename EventType, typename Function>
     void subscribe(SDL_EventType event_type, Function&& function) {
-        observers.emplace(event_type, std::move(function));
+        observers.emplace(event_type, [fn = std::forward<Function>(function)](const SDL_Event& event) { fn(reinterpret_cast<const EventType&>(event)); });
     }
     void dispatch(SDL_EventType event_type, const SDL_Event& event);
 };
