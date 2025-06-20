@@ -4,11 +4,6 @@
 #include <SDL_keycode.h>
 #include <SDL_video.h>
 
-
-
-
-
-
 EventHandler::EventHandler(Application& application) {}
 
 void EventHandler::handle_event(SDL_Event& event) {
