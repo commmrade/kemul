@@ -9,38 +9,45 @@ EventHandler::EventHandler(Application& application) {}
 void EventHandler::handle_event(SDL_Event& event) {
     switch (event.type) {
         case SDL_TEXTINPUT: {
-            m_dispatcher.post(SDL_TEXTINPUT, event);
+            dispatch(SDL_TEXTINPUT, event);
             break;
         }
         case SDL_KEYDOWN: {
-            m_dispatcher.post(SDL_KEYDOWN, event);
+            dispatch(SDL_KEYDOWN, event);
             break;
         }
         case SDL_MOUSEWHEEL: {
-            m_dispatcher.post(SDL_MOUSEWHEEL, event);
+            dispatch(SDL_MOUSEWHEEL, event);
             break;
         }
         case SDL_QUIT: {
-            m_dispatcher.post(SDL_QUIT, event);
+            dispatch(SDL_QUIT, event);
             break;
         }
         case SDL_MOUSEMOTION: {
-            m_dispatcher.post(SDL_MOUSEMOTION, event);
+            dispatch(SDL_MOUSEMOTION, event);
             break;
         }
         case SDL_MOUSEBUTTONDOWN: {
-            m_dispatcher.post(SDL_MOUSEBUTTONDOWN, event);
+            dispatch(SDL_MOUSEBUTTONDOWN, event);
             break;
         }
         case SDL_MOUSEBUTTONUP: {
-            m_dispatcher.post(SDL_MOUSEBUTTONUP, event);
+            dispatch(SDL_MOUSEBUTTONUP, event);
             break;
         }
         case SDL_WINDOWEVENT: {
-            m_dispatcher.post(SDL_WINDOWEVENT, event);
+            dispatch(SDL_WINDOWEVENT, event);
             // COnnect app to this
             break;
         }
     }
 }
 
+
+void EventHandler::dispatch(SDL_EventType event_type, const SDL_Event& event) {
+    auto range = observers.equal_range(event_type);
+    for (auto it = range.first; it != range.second; ++it) {
+        it->second(event);
+    }
+}

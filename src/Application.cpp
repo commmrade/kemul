@@ -52,14 +52,14 @@ Application::Application(const std::string &font_path) {
     parser_ = std::make_unique<AnsiParser>(*this);
 
 
-    event_handler_->subscribe(SDL_TEXTINPUT, std::bind(&Application::on_textinput_event, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_KEYDOWN, std::bind(&Application::on_keys_pressed, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_MOUSEWHEEL, std::bind(&Application::on_scroll_event, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_QUIT, std::bind(&Application::on_quit_event, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_MOUSEMOTION, std::bind(&Application::on_selection, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_MOUSEBUTTONDOWN, std::bind(&Application::on_remove_selection, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_MOUSEBUTTONUP, std::bind(&Application::reset_selection, this, std::placeholders::_1));
-    event_handler_->subscribe(SDL_WINDOWEVENT, std::bind(&Application::window_event, this, std::placeholders::_1));
+    event_handler_->subscribe<SDL_TextInputEvent>(SDL_TEXTINPUT, [this](const SDL_TextInputEvent& e) { on_textinput_event(e); });
+    event_handler_->subscribe<SDL_KeyboardEvent>(SDL_KEYDOWN,   [this](const SDL_KeyboardEvent& e) { on_keys_pressed(e); });
+    event_handler_->subscribe<SDL_MouseWheelEvent>(SDL_MOUSEWHEEL,[this](const SDL_MouseWheelEvent& e) { on_scroll_event(e); });
+    event_handler_->subscribe<SDL_Event>(SDL_QUIT,      [this](const SDL_Event& e) { on_quit_event(e); });
+    event_handler_->subscribe<SDL_MouseMotionEvent>(SDL_MOUSEMOTION,[this](const SDL_MouseMotionEvent& e) { on_selection(e); });
+    event_handler_->subscribe<SDL_Event>(SDL_MOUSEBUTTONDOWN,[this](const SDL_Event& e) { on_remove_selection(e); });
+    event_handler_->subscribe<SDL_MouseButtonEvent>(SDL_MOUSEBUTTONUP,[this](const SDL_MouseButtonEvent& e) { reset_selection(e); });
+    event_handler_->subscribe<SDL_WindowEvent>(SDL_WINDOWEVENT,[this](const SDL_WindowEvent& e) { window_event(e); });
 }
 Application::~Application() {
     close(master_fd_);
@@ -209,13 +209,13 @@ void Application::loop() {
     }
 }
 
-void Application::on_textinput_event(const SDL_Event& event) {
-    const auto* text = event.text.text;
+void Application::on_textinput_event(const SDL_TextInputEvent& event) {
+    const auto* text = event.text;
     write(master_fd_, text, SDL_strlen(text));
 }
-void Application::on_keys_pressed(const SDL_Event& event) {
-    Uint16 mods = event.key.keysym.mod;
-    SDL_Keycode keys = event.key.keysym.sym;
+void Application::on_keys_pressed(const SDL_KeyboardEvent& event) {
+    Uint16 mods = event.keysym.mod;
+    SDL_Keycode keys = event.keysym.sym;
 
     if (keys == SDLK_RETURN) {
         send_newline();
@@ -248,8 +248,8 @@ void Application::on_keys_pressed(const SDL_Event& event) {
     }
 }
 
-void Application::on_scroll_event(const SDL_Event& event) {
-    Sint32 scroll_dir = event.wheel.y;
+void Application::on_scroll_event(const SDL_MouseWheelEvent& event) {
+    Sint32 scroll_dir = event.y;
     window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
     window_->set_should_render(true);
 }
@@ -259,16 +259,16 @@ void Application::on_quit_event([[maybe_unused]] const SDL_Event& event) {
 }
 
 // Select
-void Application::on_selection(const SDL_Event& event) {
-    mouse_x = event.motion.x;
-    mouse_y = event.motion.y;
+void Application::on_selection(const SDL_MouseMotionEvent& event) {
+    mouse_x = event.x;
+    mouse_y = event.y;
 
     if (mouse_start_x != -1) {
         mouse_end_x = mouse_x;
         mouse_end_y = mouse_y;
 
         if (mouse_start_x <= 0 || mouse_start_y <= 0 || mouse_end_x <= 0 || mouse_end_y <= 0) return;
-        on_remove_selection(event);
+        on_remove_selection(SDL_Event{});
         buffer_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y, window_->get_scroll_offset());
         window_->set_should_render(true);
     }
@@ -282,7 +282,7 @@ void Application::on_remove_selection(const SDL_Event& event) {
     mouse_start_y = mouse_y;
 }
 
-void Application::reset_selection(const SDL_Event& event) {
+void Application::reset_selection(const SDL_MouseButtonEvent& event) {
     mouse_start_x = -1;
     mouse_start_y = -1;
     mouse_end_x = -1;
@@ -386,8 +386,8 @@ void Application::on_reset_cursor(bool x_dir, bool y_dir) {
     buffer_->reset_cursor(x_dir, y_dir);
 }
 
-void Application::window_event(const SDL_Event& event) {
-    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+void Application::window_event(const SDL_WindowEvent& event) {
+    if (event.event == SDL_WINDOWEVENT_RESIZED) {
         on_window_resized();
     }
 }

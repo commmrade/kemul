@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2/SDL_keycode.h>
+#include <SDL_events.h>
 #include <SDL_keyboard.h>
 #include <SDL_stdinc.h>
 #include <iostream>
@@ -49,16 +50,16 @@ public:
     void run();
 
     // Keypress events and others (like window resize)
-    void on_textinput_event(const SDL_Event& event);
-    void on_keys_pressed(const SDL_Event& event);
-    void on_scroll_event(const SDL_Event& event);
+    void on_textinput_event(const SDL_TextInputEvent& event);
+    void on_keys_pressed(const SDL_KeyboardEvent& event);
+    void on_scroll_event(const SDL_MouseWheelEvent& event);
     void on_quit_event(const SDL_Event& event);
 
-    void on_selection(const SDL_Event& event);
+    void on_selection(const SDL_MouseMotionEvent& event);
     void on_remove_selection(const SDL_Event& event);
-    void reset_selection(const SDL_Event& event);
+    void reset_selection(const SDL_MouseButtonEvent& event);
 
-    void window_event(const SDL_Event& event);
+    void window_event(const SDL_WindowEvent& event);
 
     void erase_character();
     void send_newline();
