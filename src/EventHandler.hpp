@@ -15,7 +15,7 @@ public:
     // Mouse selection variables
     void handle_event(SDL_Event& event);
 
-    template <typename EventType, typename Function>
+    template <typename Function>
     void subscribe(SDL_EventType event_type, Function&& function) {
         observers.emplace(event_type, std::move(function));
     }

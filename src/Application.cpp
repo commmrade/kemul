@@ -52,14 +52,14 @@ Application::Application(const std::string &font_path) {
     parser_ = std::make_unique<AnsiParser>(*this);
 
 
-    event_handler_->subscribe<SDL_TextInputEvent>(SDL_TEXTINPUT, [this](const SDL_TextInputEvent& e) { on_textinput_event(e); });
-    event_handler_->subscribe<SDL_KeyboardEvent>(SDL_KEYDOWN,   [this](const SDL_KeyboardEvent& e) { on_keys_pressed(e); });
-    event_handler_->subscribe<SDL_MouseWheelEvent>(SDL_MOUSEWHEEL,[this](const SDL_MouseWheelEvent& e) { on_scroll_event(e); });
-    event_handler_->subscribe<SDL_Event>(SDL_QUIT,      [this](const SDL_Event& e) { on_quit_event(e); });
-    event_handler_->subscribe<SDL_MouseMotionEvent>(SDL_MOUSEMOTION,[this](const SDL_MouseMotionEvent& e) { on_selection(e); });
-    event_handler_->subscribe<SDL_Event>(SDL_MOUSEBUTTONDOWN,[this](const SDL_Event& e) { on_remove_selection(e); });
-    event_handler_->subscribe<SDL_MouseButtonEvent>(SDL_MOUSEBUTTONUP,[this](const SDL_MouseButtonEvent& e) { reset_selection(e); });
-    event_handler_->subscribe<SDL_WindowEvent>(SDL_WINDOWEVENT,[this](const SDL_WindowEvent& e) { window_event(e); });
+    event_handler_->subscribe(SDL_TEXTINPUT, [this](const SDL_TextInputEvent& e) { on_textinput_event(e); });
+    event_handler_->subscribe(SDL_KEYDOWN,   [this](const SDL_KeyboardEvent& e) { on_keys_pressed(e); });
+    event_handler_->subscribe(SDL_MOUSEWHEEL,[this](const SDL_MouseWheelEvent& e) { on_scroll_event(e); });
+    event_handler_->subscribe(SDL_QUIT,      [this](const SDL_Event& e) { on_quit_event(e); });
+    event_handler_->subscribe(SDL_MOUSEMOTION,[this](const SDL_MouseMotionEvent& e) { on_selection(e); });
+    event_handler_->subscribe(SDL_MOUSEBUTTONDOWN,[this](const SDL_Event& e) { on_remove_selection(e); });
+    event_handler_->subscribe(SDL_MOUSEBUTTONUP,[this](const SDL_MouseButtonEvent& e) { reset_selection(e); });
+    event_handler_->subscribe(SDL_WINDOWEVENT,[this](const SDL_WindowEvent& e) { window_event(e); });
 }
 Application::~Application() {
     close(master_fd_);
