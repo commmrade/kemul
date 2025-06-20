@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
-#include <ios>
+#include <iostream>
 #include <memory>
 #include <pty.h>
 #include <stdexcept>
