@@ -1,6 +1,5 @@
 #pragma once
 #include <SDL_events.h>
-#include <iostream>
 #include "Application.hpp"
 
 class EventHandler {
