@@ -373,7 +373,7 @@ void TermBuffer::grow_cols(int n) {
 
     buffer_.clear();
     buffer_.assign(reversed.rbegin(), reversed.rend()); // Reversing reversed buffer
-    if ((int)buffer_.size() < height_cells_) {
+    if (static_cast<int>(buffer_.size()) < height_cells_) {
         expand_down(height_cells_ - buffer_.size());
     }
 
@@ -391,9 +391,7 @@ void TermBuffer::shrink_cols(int n) {
     }
 
     auto row_length = [](const std::vector<Cell>& row) {
-        return std::count_if(row.begin(), row.end(), [](const Cell& cell) {
-            return cell.codepoint != 0;
-        }); // Real length of the row (kinda works so let it be)
+        return std::distance(row.begin(), std::find_if(row.begin(), row.end(), [](const Cell& cell) { return cell.codepoint == 0; }));
     };
 
     std::vector<std::vector<Cell>> new_buffer;
@@ -403,6 +401,7 @@ void TermBuffer::shrink_cols(int n) {
         auto row = *it;
         if (!carry.empty()) { // If there is some carry-over
             if (carry.back().is_wrapline()) {  // And there was wrapline on the last symbol
+                carry.back().set_wrapline(false);
                 row.insert(row.begin(), carry.begin(), carry.end()); // Insert the carry-over into the current line
             } else { // If no wrapline
                 carry.resize(width_cells_);
@@ -427,12 +426,10 @@ void TermBuffer::shrink_cols(int n) {
 
     while (!carry.empty()) { // If there is carry left append it
         std::vector<Cell> new_row;
-        if ((int)carry.size() > width_cells_) {
+        if (static_cast<int>(carry.size()) > width_cells_) {
             new_row.assign(carry.begin(), carry.begin() + width_cells_);
             carry.erase(carry.begin(), carry.begin() + width_cells_);
-            if (!new_row.empty() && new_row.back().codepoint != 0) {
-                new_row.back().set_wrapline();
-            }
+            new_row.back().set_wrapline();
         } else {
             new_row = std::move(carry);
             carry.clear();
@@ -442,7 +439,7 @@ void TermBuffer::shrink_cols(int n) {
     }
 
     buffer_ = std::move(new_buffer);
-    if ((int)buffer_.size() < height_cells_) {
+    if (static_cast<int>(buffer_.size()) < height_cells_) {
         expand_down(height_cells_ - buffer_.size());
     }
 }

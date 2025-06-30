@@ -16,7 +16,7 @@ AnsiParser::AnsiParser(Application& app) : application(app) {
 
 
 void AnsiParser::parse(const std::string& text) {
-    std::string::const_iterator it = text.begin();
+    std::string::const_iterator it = text.cbegin();
     while (it != text.end()) {
         if (state == GeneralState::TEXT) {
             try {
