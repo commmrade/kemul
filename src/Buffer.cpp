@@ -1,6 +1,7 @@
 #include "Buffer.hpp"
 #include <algorithm>
 #include <iterator>
+#include <print>
 #include <utf8cpp/utf8/cpp17.h>
 #include <utility>
 #include <vector>
@@ -77,6 +78,14 @@ void TermBuffer::add_cells(std::vector<Cell>&& cells) {
             cursor_down();
             cursor_x_ = 0;
         }
+    }
+
+    std::println("===============");
+    for (auto& row : buffer_) {
+        for (auto& cell : row) {
+            std::print("{}, ", cell.is_wrapline() == true ? 1 : 0);
+        }
+        std::println("");
     }
 }
 
@@ -322,6 +331,8 @@ void TermBuffer::resize(std::pair<int, int> new_window_size, std::pair<int, int>
     } else if (width_cells_ > new_width_cells) {
         shrink_cols(width_cells_ - new_width_cells);
     }
+
+    
 }
 
 void TermBuffer::grow_lines(int n) {
@@ -334,54 +345,55 @@ void TermBuffer::shrink_lines(int n) {
     }
 }
 
+
+
 void TermBuffer::grow_cols(int n) {
     width_cells_ += n;
 
-    auto should_reflow = [this](const std::vector<Cell>& row) {
-        auto length = (int)row.size();
-        return !row.empty() && length < width_cells_ && row.back().is_wrapline();
-    }; // Check if you should reflow it at all, if there is a wrapline flag at the end of the row, it means it was carried-over so we should 'undo' it
+    std::vector<std::vector<Cell>> new_buffer;
+    for (size_t i = 0; i < buffer_.size(); ++i) {
+        std::vector<Cell> row = std::move(buffer_[i]);
 
-    std::vector<std::vector<Cell>> reversed; // Buffer which tracks prev row
-    reversed.reserve(height_cells_);
-    int cursor_delta{0};
-    for (auto it = buffer_.rbegin(), end = buffer_.rend(); it != end; ++it) {
-        std::vector<Cell> next_row = *it; // Tracks cur row
+        // Попытка слить следующую строку, если текущая заканчивается wrapline
+        while (!row.empty() && row.back().is_wrapline() && i + 1 < buffer_.size()) {
+            row.back().set_wrapline(false); // убираем wrapline, попробуем слить
 
-        if (!reversed.empty() && should_reflow(next_row)) {
-            next_row.back().set_wrapline(false); // If we gonna reflow it, we should remove wrapline flag
+            std::vector<Cell>& next = buffer_[i + 1];
 
-            auto& last_row = reversed.back();
+            // Найдём реальные данные в next
+            auto real_end = std::find_if(next.rbegin(), next.rend(), [](const Cell& c) {
+                return c.codepoint != 0;
+            }).base();
 
-            int can_take_n = std::min((int)last_row.size(), width_cells_ - (int)next_row.size()); // So we can at most take last_row.size() elements so if width - row.size is a too much
-            // choose last row size, on the other hand, width - row.size means how many cells we can reflow at all, if last row size is too big, choose this
-            // "Spliting front off" last_row
-            next_row.insert(next_row.end(), last_row.begin(), last_row.begin() + can_take_n);
-            last_row.erase(last_row.begin(), last_row.begin() + can_take_n); // Causes segfault
-            // Add wrapline for next row
-            if (last_row.empty() || std::all_of(last_row.begin(), last_row.end(), [](const auto & elem) { return elem.codepoint == 0; })) {
-                reversed.pop_back(); // We don't need empty line, so just pop it
-                ++cursor_delta;
-                --max_pos_y_; // So scrolling  isnt fucked
+            // Добавим столько, сколько влезет
+            int remaining = width_cells_ - static_cast<int>(row.size());
+            if (remaining <= 0) break;
+
+            int to_take = std::min<int>(std::distance(next.begin(), real_end), remaining);
+            row.insert(row.end(), next.begin(), next.begin() + to_take);
+            next.erase(next.begin(), next.begin() + to_take);
+
+            // Если что-то осталось — ставим врап
+            if (std::any_of(next.begin(), next.end(), [](const Cell& c) { return c.codepoint != 0; })) {
+                row.back().set_wrapline();
+                break;
             } else {
-                next_row.back().set_wrapline(); // If there are cells left, line is still wrapped, so set this flag again
+                ++i; // следующая строка полностью поглощена
             }
         }
-        next_row.resize(width_cells_); // Make sure its correct size
-        reversed.push_back(std::move(next_row));
+
+        row.resize(width_cells_); // под новую ширину
+        new_buffer.push_back(std::move(row));
     }
 
-    buffer_.clear();
-    buffer_.assign(reversed.rbegin(), reversed.rend()); // Reversing reversed buffer
+    buffer_ = std::move(new_buffer);
     if (static_cast<int>(buffer_.size()) < height_cells_) {
         expand_down(height_cells_ - buffer_.size());
     }
-
-    for (auto & row : buffer_) { // Since when we reflow we cut off reversed, size changed
-        row.resize(width_cells_);
-    }
-    cursor_up(cursor_delta);
 }
+
+
+
 
 void TermBuffer::shrink_cols(int n) {
     if (n >= width_cells_) {

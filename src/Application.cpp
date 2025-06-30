@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <print>
 #include <pty.h>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>
@@ -44,6 +45,7 @@ Application::Application(const std::string &font_path) {
     setup_pty(false, config_.default_window_width / font_size.first - 1);
     set_blocking_mode(false);
 
+    std::println("DEFault: {} {}", config_.default_window_height, config_.default_window_width);
     // Init other stuff
     buffer_ = std::make_unique<TermBuffer>(config_.default_window_width, config_.default_window_height, font_size.first, font_size.second);
     event_handler_ = std::make_unique<EventHandler>(*this);
