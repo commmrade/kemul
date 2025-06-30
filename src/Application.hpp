@@ -1,7 +1,9 @@
 #pragma once
 #include <SDL2/SDL_keycode.h>
+#include <SDL_events.h>
 #include <SDL_keyboard.h>
 #include <SDL_stdinc.h>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <sys/poll.h>
@@ -34,6 +36,13 @@ private:
 
     // Config stuff
     Config config_;
+
+    // Mouse selection stuff
+    int mouse_x{-1}, mouse_y{-1};
+    int mouse_start_x{-1};
+    int mouse_start_y{-1};
+    int mouse_end_x{-1};
+    int mouse_end_y{-1};
 public:
     explicit Application(const std::string &font_path);
     ~Application();
@@ -41,10 +50,19 @@ public:
     void run();
 
     // Keypress events and others (like window resize)
-    void on_textinput_event(const char* sym);
+    void on_textinput_event(const SDL_TextInputEvent& event);
+    void on_keys_pressed(const SDL_KeyboardEvent& event);
+    void on_scroll_event(const SDL_MouseWheelEvent& event);
+    void on_quit_event(const SDL_Event& event);
+
+    void on_selection(const SDL_MouseMotionEvent& event);
+    void on_remove_selection(const SDL_Event& event);
+    void reset_selection(const SDL_MouseButtonEvent& event);
+
+    void window_event(const SDL_WindowEvent& event);
+
     void erase_character();
     void send_newline();
-    void on_scroll_event(Sint32 scroll_dir);
     void paste_text(const char* text);
     void on_arrowkey_pressed(SDL_Keycode sym);
     void on_backspace();
@@ -55,15 +73,14 @@ public:
     void reverse_find();
     void cursor_to_back(); // CUrsor to the back
     void cursor_to_end(); // Cursor to the end
-    void on_keys_pressed(Uint16 mods, SDL_Keycode keys);
     void on_window_resized();
-    void on_selection(int start_x, int start_y, int end_x, int end_y);
-    void on_remove_selection();
+    
+    
     void copy_selected_text();
 
     // Parser events
     void on_erase_event();
-    void on_quit_event();
+    
     void on_add_cells(std::vector<Cell>&& cells);
     void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);

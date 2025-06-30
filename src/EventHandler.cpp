@@ -4,60 +4,50 @@
 #include <SDL_keycode.h>
 #include <SDL_video.h>
 
-EventHandler::EventHandler(Application& application) : application(application) {
-    
-}
+EventHandler::EventHandler(Application& application) {}
 
 void EventHandler::handle_event(SDL_Event& event) {
     switch (event.type) {
         case SDL_TEXTINPUT: {
-            application.on_textinput_event(event.text.text);
+            dispatch(SDL_TEXTINPUT, event);
             break;
         }
         case SDL_KEYDOWN: {
-            application.on_keys_pressed(event.key.keysym.mod, event.key.keysym.sym);
+            dispatch(SDL_KEYDOWN, event);
             break;
         }
         case SDL_MOUSEWHEEL: {
-            application.on_scroll_event(event.wheel.y);
+            dispatch(SDL_MOUSEWHEEL, event);
             break;
         }
         case SDL_QUIT: {
-            application.on_quit_event();
+            dispatch(SDL_QUIT, event);
             break;
         }
         case SDL_MOUSEMOTION: {
-            mouse_x = event.motion.x;
-            mouse_y = event.motion.y;
-
-            if (mouse_start_x != -1) {
-                mouse_end_x = mouse_x;
-                mouse_end_y = mouse_y;
-
-                if (mouse_start_x <= 0 || mouse_start_y <= 0 || mouse_end_x <= 0 || mouse_end_y <= 0) return;
-                application.on_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y);
-            }
+            dispatch(SDL_MOUSEMOTION, event);
             break;
         }
         case SDL_MOUSEBUTTONDOWN: {
-            application.on_remove_selection();
-            mouse_start_x = mouse_x;
-            mouse_start_y = mouse_y;
+            dispatch(SDL_MOUSEBUTTONDOWN, event);
             break;
         }
         case SDL_MOUSEBUTTONUP: {
-            mouse_start_x = -1;
-            mouse_start_y = -1;
-            mouse_end_x = -1;
-            mouse_end_y = -1;
+            dispatch(SDL_MOUSEBUTTONUP, event);
             break;
         }
         case SDL_WINDOWEVENT: {
-            if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                application.on_window_resized();
-            }
+            dispatch(SDL_WINDOWEVENT, event);
+            // COnnect app to this
             break;
         }
     }
 }
 
+
+void EventHandler::dispatch(SDL_EventType event_type, const SDL_Event& event) {
+    auto range = observers.equal_range(event_type);
+    for (auto it = range.first; it != range.second; ++it) {
+        it->second(event);
+    }
+}
