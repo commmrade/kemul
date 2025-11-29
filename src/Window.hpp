@@ -58,8 +58,8 @@ private:
     // Drawing (SDL) stuff;
     SDL_Window* window_{nullptr};
     SDL_Renderer* renderer_{nullptr};
-    
-    
+
+
 
     std::unique_ptr<GlyphCache> glyph_cache_;
 

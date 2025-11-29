@@ -34,9 +34,6 @@ private:
     std::unique_ptr<EventHandler> event_handler_;
     std::unique_ptr<AnsiParser> parser_;
 
-    // Config stuff
-    Config config_;
-
     // Mouse selection stuff
     int mouse_x{-1}, mouse_y{-1};
     int mouse_start_x{-1};
@@ -46,7 +43,7 @@ private:
 public:
     explicit Application(const std::string &font_path);
     ~Application();
-    
+
     void run();
 
     // Keypress events and others (like window resize)
@@ -74,13 +71,13 @@ public:
     void cursor_to_back(); // CUrsor to the back
     void cursor_to_end(); // Cursor to the end
     void on_window_resized();
-    
-    
+
+
     void copy_selected_text();
 
     // Parser events
     void on_erase_event();
-    
+
     void on_add_cells(std::vector<Cell>&& cells);
     void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);
@@ -96,6 +93,5 @@ private:
     void init_ttf();
     void setup_pty(bool echo, int cols);
     void loop();
-    void load_config();
     void set_blocking_mode(bool enabled);
 };

@@ -36,7 +36,9 @@
 Application::Application(const std::string &font_path) {
     init_sdl();
     init_ttf();
-    load_config();
+    auto appdata_dir = std::filesystem::path(std::getenv("HOME")) / ".local/share/kemul";
+    auto config_path = appdata_dir / "config.cock";
+    auto config_ = Config{config_path};
 
     window_ = std::make_unique<Window>(config_.font_path, config_.font_ptsize, config_.default_window_width, config_.default_window_height); // Setting up window before so we can get font size
     auto font_size = window_->get_font_size();
@@ -66,58 +68,6 @@ Application::~Application() {
     close(slave_fd_);
 }
 
-
-void Application::load_config() {
-    auto appdata_dir = std::filesystem::path(std::getenv("HOME")) / ".local/share/kemul";
-    auto config_path = appdata_dir / "config.cock";
-
-    std::ifstream file{config_path};
-    if (!file.is_open()) {
-        std::cerr << "No config file located" << std::endl;
-        return;
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        if (auto pos = line.find("="); pos != std::string::npos) {
-            auto name = std::string{line.substr(0, pos)};
-            auto value = std::string{line.substr(pos + 1)};
-            if (name == "fontSize") {
-                try {
-                    auto ptsize = std::stoi(value);
-                    if (ptsize <= 0) continue;
-                    config_.font_ptsize = ptsize;
-                } catch (const std::exception& ex) {
-                    std::cerr << ex.what() << std::endl;
-                }
-            } else if (name == "fontPath") {
-                if (!std::filesystem::exists(value)) {
-                    std::cerr << "Such font doesn't exist" << std::endl;
-                    continue;
-                }
-                config_.font_path = std::move(value);
-            } else if (name == "defaultWindowWidth") {
-                try {
-                    auto width = std::stoi(value);
-                    if (width <= 0) continue;
-                    config_.default_window_width = width;
-                } catch (const std::exception& ex) {
-                    std::cerr << ex.what() << std::endl;
-                }
-            } else if (name == "defaultWindowHeight") {
-                try {
-                    auto height = std::stoi(value);
-                    if (height <= 0) continue;
-                    config_.default_window_height = height;
-                } catch (const std::exception& ex) {
-                    std::cerr << ex.what() << std::endl;
-                }
-            }
-        } else {
-            continue;
-        }
-    }
-}
 
 void Application::init_sdl() {
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -272,7 +222,7 @@ void Application::on_selection(const SDL_MouseMotionEvent& event) {
         buffer_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y, window_->get_scroll_offset());
         window_->set_should_render(true);
     }
-   
+
 }
 void Application::on_remove_selection(const SDL_Event& event) {
     buffer_->remove_selection();

@@ -27,7 +27,7 @@
 Window::Window(const std::string& font_path, int font_ptsize, int width, int height) : width_(width), height_(height), font_ptsize_(font_ptsize) {
     init();
     load_font(font_path);
-    
+
     auto max_size = get_max_texture_size();
     glyph_cache_ = std::make_unique<GlyphCache>(renderer_, font_, max_size);
 }
@@ -91,7 +91,7 @@ void Window::draw(const TermBuffer& term_buffer) {
     for (int i = scroll_offset_; i < std::min((int)scroll_offset_ + render_limit, (int)buffer.size()); ++i) {
         for (auto cell : buffer[i]) {
             if (cell.codepoint == 0) cell.codepoint = ' ';
-            
+
             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, font_, cell.codepoint);
             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
 
@@ -124,7 +124,7 @@ void Window::draw(const TermBuffer& term_buffer) {
 
     SDL_Rect cursor_rect{t_cursor_x * font_size.first + font_size.first, (t_cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, font_size.first, font_size.second};
     SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer_, &cursor_rect);    
+    SDL_RenderFillRect(renderer_, &cursor_rect);
     SDL_RenderPresent(renderer_);
     should_render_ = false;
 }
