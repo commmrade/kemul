@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <memory>
+#include <print>
 #include <pty.h>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>
@@ -242,7 +243,40 @@ std::pair<int, int> Window::get_cursor_pos() const {
     return buffer_->get_cursor_pos();
 }
 
+void Window::on_selection(int x, int y) {
+    mouse_x = x;
+    mouse_y = y;
+
+    if (mouse_start_x != -1) {
+        set_selection(mouse_start_x, mouse_start_y, mouse_x, mouse_y);
+        mouse_end_x = mouse_x;
+        mouse_end_y = mouse_y;
+    }
+}
+void Window::on_remove_selection() {
+    remove_selection();
+
+    mouse_start_x = mouse_x;
+    mouse_start_y = mouse_y;
+}
+void Window::reset_selection() {
+    mouse_start_x = -1;
+    mouse_start_y = -1;
+    mouse_end_x = -1;
+    mouse_end_y = -1;
+}
+
 void Window::set_selection(int start_x, int start_y, int end_x, int end_y) {
+    if (mouse_end_y >= mouse_start_y || mouse_end_x > mouse_start_x) {
+        if (end_x < mouse_end_x || end_y < mouse_end_y) {
+            remove_selection();
+        }
+    } else if (mouse_end_y <= mouse_start_y || mouse_end_x < mouse_start_x) {
+        if (end_x > mouse_end_x || end_y > mouse_end_y) {
+            remove_selection();
+        }
+    }
+
     buffer_->set_selection(start_x, start_y, end_x, end_y, get_scroll_offset());
     set_should_render(true);
 }

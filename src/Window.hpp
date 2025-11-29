@@ -46,6 +46,13 @@ private:
     CursorPos cursor_pos_;
     uint curs_char_idx_;
 
+    // Selection stuff
+    int mouse_x{-1}, mouse_y{-1};
+    int mouse_start_x{-1};
+    int mouse_start_y{-1};
+    int mouse_end_x{-1};
+    int mouse_end_y{-1};
+
     int8_t scroll_step_{2};
 
     bool is_running_{true};
@@ -92,6 +99,11 @@ public:
         SDL_GetWindowSize(window_, &w, &h);
         return {w, h};
     }
+
+    // Selection tracking
+    void on_selection(int x, int y);
+    void on_remove_selection();
+    void reset_selection();
 
     // Buffer stuff
     void clear_buf(bool remove = false);

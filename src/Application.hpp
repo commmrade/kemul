@@ -34,12 +34,6 @@ private:
     std::unique_ptr<EventHandler> event_handler_;
     std::unique_ptr<AnsiParser> parser_;
 
-    // Mouse selection stuff
-    int mouse_x{-1}, mouse_y{-1};
-    int mouse_start_x{-1};
-    int mouse_start_y{-1};
-    int mouse_end_x{-1};
-    int mouse_end_y{-1};
 public:
     explicit Application(const std::string &font_path);
     ~Application();
@@ -49,12 +43,7 @@ public:
     // Keypress events and others (like window resize)
     void on_textinput_event(const SDL_TextInputEvent& event);
     void on_keys_pressed(const SDL_KeyboardEvent& event);
-    void on_scroll_event(const SDL_MouseWheelEvent& event);
     void on_quit_event(const SDL_Event& event);
-
-    void on_selection(const SDL_MouseMotionEvent& event);
-    void on_remove_selection(const SDL_Event& event);
-    void reset_selection(const SDL_MouseButtonEvent& event);
 
     void window_event(const SDL_WindowEvent& event);
 
@@ -77,7 +66,6 @@ public:
 
     // Parser events
     void on_erase_event();
-
     void on_add_cells(std::vector<Cell>&& cells);
     void on_set_cursor(int row, int col);
     void on_move_cursor(int row, int col);

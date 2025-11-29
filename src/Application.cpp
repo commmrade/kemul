@@ -65,13 +65,13 @@ Application::Application(const std::string &font_path) {
         on_quit_event(e);
     });
     event_handler_->subscribe<SDL_MouseMotionEvent>(SDL_MOUSEMOTION,[this](const SDL_MouseMotionEvent& e) {
-        on_selection(e);
+        window_->on_selection(e.x, e.y);
     });
     event_handler_->subscribe<SDL_Event>(SDL_MOUSEBUTTONDOWN,[this](const SDL_Event& e) {
-        on_remove_selection(e);
+        window_->on_remove_selection();
     });
     event_handler_->subscribe<SDL_MouseButtonEvent>(SDL_MOUSEBUTTONUP,[this](const SDL_MouseButtonEvent& e) {
-        reset_selection(e);
+        window_->reset_selection();
     });
     event_handler_->subscribe<SDL_WindowEvent>(SDL_WINDOWEVENT,[this](const SDL_WindowEvent& e) {
         window_event(e);
@@ -213,45 +213,9 @@ void Application::on_keys_pressed(const SDL_KeyboardEvent& event) {
     }
 }
 
-void Application::on_scroll_event(const SDL_MouseWheelEvent& event) {
-    Sint32 scroll_dir = event.y;
-    // window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
-    window_->scroll(scroll_dir);
-}
-
 void Application::on_quit_event([[maybe_unused]] const SDL_Event& event) {
     is_running_ = false;
 }
-
-// Select
-void Application::on_selection(const SDL_MouseMotionEvent& event) {
-    mouse_x = event.x;
-    mouse_y = event.y;
-
-    if (mouse_start_x != -1) {
-        mouse_end_x = mouse_x;
-        mouse_end_y = mouse_y;
-
-        if (mouse_start_x <= 0 || mouse_start_y <= 0 || mouse_end_x <= 0 || mouse_end_y <= 0) return;
-        window_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y);
-    }
-
-}
-void Application::on_remove_selection(const SDL_Event& event) {
-    std::println("Cleared");
-    window_->remove_selection();
-
-    mouse_start_x = mouse_x;
-    mouse_start_y = mouse_y;
-}
-
-void Application::reset_selection(const SDL_MouseButtonEvent& event) {
-    mouse_start_x = -1;
-    mouse_start_y = -1;
-    mouse_end_x = -1;
-    mouse_end_y = -1;
-}
-
 
 void Application::send_newline() {
     write(master_fd_, "\n", 1);
