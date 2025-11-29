@@ -155,7 +155,6 @@ void Application::loop() {
         if (poll_status < 0) {
             throw std::runtime_error("Some kinda poll error");
         }
-
         if (fds_[0].revents & POLLIN) {
             char buf[1024];
             ssize_t rd_size;
@@ -168,8 +167,6 @@ void Application::loop() {
             parser_->parse(output);
             window_->set_should_render(true);
         }
-
-        // window_->draw(*buffer_.get());
         window_->draw();
     }
 }

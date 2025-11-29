@@ -182,13 +182,14 @@ void TermBuffer::iterate_mouse_selection(bool should_clear) {
         x_end = std::min(x_end, width_cells_ - 1);
 
         for (auto j = x_start; j <= x_end; ++j) {
-            if (should_clear) {
-                buffer_[mouse_start_cell.second][j].fg_color = {200, 200, 200, 255}; // White
-                buffer_[mouse_start_cell.second][j].bg_color = {0, 0, 0, 255};       // Black
-            } else {
-                buffer_[mouse_start_cell.second][j].bg_color = {200, 200, 200, 255}; // White
-                buffer_[mouse_start_cell.second][j].fg_color = {0, 0, 0, 255};       // Black
-            }
+            // if (should_clear) {
+            //     buffer_[mouse_start_cell.second][j].fg_color = {200, 200, 200, 255}; // White
+            //     buffer_[mouse_start_cell.second][j].bg_color = {0, 0, 0, 255};       // Black
+            // } else {
+            //     buffer_[mouse_start_cell.second][j].bg_color = {200, 200, 200, 255}; // White
+            //     buffer_[mouse_start_cell.second][j].fg_color = {0, 0, 0, 255};       // Black
+            // }
+            std::swap(buffer_[mouse_start_cell.second][j].fg_color, buffer_[mouse_start_cell.second][j].bg_color);
         }
         return;
     }
@@ -213,13 +214,14 @@ void TermBuffer::iterate_mouse_selection(bool should_clear) {
         x_end = std::min(x_end, width_cells_ - 1);
 
         for (auto j = x_start; j <= x_end; ++j) {
-            if (should_clear) {
-                buffer_[i][j].fg_color = {200, 200, 200, 255}; // White
-                buffer_[i][j].bg_color = {0, 0, 0, 255};       // Black
-            } else {
-                buffer_[i][j].bg_color = {200, 200, 200, 255}; // White
-                buffer_[i][j].fg_color = {0, 0, 0, 255};       // Black
-            }
+            std::swap(buffer_[i][j].fg_color, buffer_[i][j].bg_color);
+            // if (should_clear) {
+            //     buffer_[i][j].fg_color = {200, 200, 200, 255}; // White
+            //     buffer_[i][j].bg_color = {0, 0, 0, 255};       // Black
+            // } else {
+            //     buffer_[i][j].bg_color = {200, 200, 200, 255}; // White
+            //     buffer_[i][j].fg_color = {0, 0, 0, 255};       // Black
+            // }
         }
         ++i;
     } while (i <= mouse_end_cell.second);

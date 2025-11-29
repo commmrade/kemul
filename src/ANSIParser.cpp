@@ -21,7 +21,6 @@ void AnsiParser::parse(const std::string& text) {
         if (state == GeneralState::TEXT) {
             try {
                 uint32_t codepoint = utf8::next(it, text.end());
-                // std::cout <<  "0x" << std::hex << codepoint << std::dec << std::endl;
                 if (codepoint == 0x1B) { // ESC character
                     state = GeneralState::ESCAPE;
                 } else if (codepoint == 0x0D) { // Carriage Return ('\r', codepoint 13)
