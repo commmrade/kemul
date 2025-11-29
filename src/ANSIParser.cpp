@@ -91,7 +91,7 @@ std::vector<int> AnsiParser::parse_params(const std::string& csi_sequence) {
         if (param.empty()) {
             params.push_back(0);
         } else if (param[0] == '?') {
-            // Handle private mode parameters 
+            // Handle private mode parameters
             try {
                 params.push_back(std::stoi(param.substr(1))); // Store number after '?'
                 params.push_back(-1); // Indicator for private mode
@@ -183,7 +183,6 @@ void AnsiParser::handle_CSI(char command, std::vector<int> params) {
         application.on_insert_chars(n);
     } else if (command == 'P') {
         int n = params.empty() ? 0 : params[0];
-        std::cout << "deleted" << std::endl;
         application.on_delete_chars(n);
     }
     // std::cout << command << std::endl;

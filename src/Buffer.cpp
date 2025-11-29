@@ -80,13 +80,13 @@ void TermBuffer::add_cells(std::vector<Cell>&& cells) {
         }
     }
 
-    std::println("===============");
-    for (auto& row : buffer_) {
-        for (auto& cell : row) {
-            std::print("{}, ", cell.is_wrapline() == true ? 1 : 0);
-        }
-        std::println("");
-    }
+    // std::println("===============");
+    // for (auto& row : buffer_) {
+    //     for (auto& cell : row) {
+    //         std::print("{}, ", cell.is_wrapline() == true ? 1 : 0);
+    //     }
+    //     std::println("");
+    // }
 }
 
 
@@ -214,6 +214,7 @@ void TermBuffer::iterate_mouse_selection() {
 }
 
 void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset) {
+    std::println("Set selection: {}x{} to {}x{}", start_x, start_y, end_x, end_y);
     if (start_y <= end_y) {
         mouse_start_cell.first = start_x / cell_size_.first;
         mouse_start_cell.second = start_y / cell_size_.second;
@@ -332,7 +333,7 @@ void TermBuffer::resize(std::pair<int, int> new_window_size, std::pair<int, int>
         shrink_cols(width_cells_ - new_width_cells);
     }
 
-    
+
 }
 
 void TermBuffer::grow_lines(int n) {

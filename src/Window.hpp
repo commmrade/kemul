@@ -60,7 +60,7 @@ private:
     SDL_Renderer* renderer_{nullptr};
 
 
-
+    std::unique_ptr<TermBuffer> buffer_;
     std::unique_ptr<GlyphCache> glyph_cache_;
 
 public:
@@ -68,13 +68,15 @@ public:
     explicit Window(const std::string& font_path, int font_ptsize, int width, int height);
     ~Window();
 
-    void draw(const TermBuffer& term_buffer);
+    // void draw(const TermBuffer& term_buffer);
+    void draw();
     void set_should_render(bool value);
 
     std::pair<int, int> get_max_texture_size() const;
     std::pair<int, int> get_font_size() const;
 
-    void scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y);
+    // void scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y);
+    void scroll(Sint32 dir);
     void resize();
 
     void set_window_title(const std::string& win_title);
@@ -91,6 +93,20 @@ public:
         return {w, h};
     }
 
+    // Buffer stuff
+    void clear_buf(bool remove = false);
+    void set_selection(int start_x, int start_y, int end_x, int end_y);
+    void remove_selection();
+    void erase_at_end();
+    void set_cursor(int row, int col);
+    void move_cursor(int row, int col);
+    void reset_cursor(bool x_dir, bool y_dir);
+    std::pair<int, int> get_cursor_pos() const;
+    void add_cells(std::vector<Cell>&& cells);
+    void erase_in_line(int mode);
+    void insert_chars(int n);
+    void delete_chars(int n);
+    std::string get_selected_text() const;
 private:
     void load_font(const std::string& font_path);
     void init();

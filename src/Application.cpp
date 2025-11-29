@@ -47,21 +47,35 @@ Application::Application(const std::string &font_path) {
     setup_pty(false, config_.default_window_width / font_size.first - 1);
     set_blocking_mode(false);
 
-    std::println("DEFault: {} {}", config_.default_window_height, config_.default_window_width);
     // Init other stuff
-    buffer_ = std::make_unique<TermBuffer>(config_.default_window_width, config_.default_window_height, font_size.first, font_size.second);
+    // buffer_ = std::make_unique<TermBuffer>(config_.default_window_width, config_.default_window_height, font_size.first, font_size.second);
     event_handler_ = std::make_unique<EventHandler>(*this);
     parser_ = std::make_unique<AnsiParser>(*this);
 
 
-    event_handler_->subscribe<SDL_TextInputEvent>(SDL_TEXTINPUT, [this](const SDL_TextInputEvent& e) { on_textinput_event(e); });
+    event_handler_->subscribe<SDL_TextInputEvent>(SDL_TEXTINPUT, [this](const SDL_TextInputEvent& e) {
+        on_textinput_event(e);
+    });
     event_handler_->subscribe<SDL_KeyboardEvent>(SDL_KEYDOWN,   [this](const SDL_KeyboardEvent& e) { on_keys_pressed(e); });
-    event_handler_->subscribe<SDL_MouseWheelEvent>(SDL_MOUSEWHEEL,[this](const SDL_MouseWheelEvent& e) { on_scroll_event(e); });
-    event_handler_->subscribe<SDL_Event>(SDL_QUIT,      [this](const SDL_Event& e) { on_quit_event(e); });
-    event_handler_->subscribe<SDL_MouseMotionEvent>(SDL_MOUSEMOTION,[this](const SDL_MouseMotionEvent& e) { on_selection(e); });
-    event_handler_->subscribe<SDL_Event>(SDL_MOUSEBUTTONDOWN,[this](const SDL_Event& e) { on_remove_selection(e); });
-    event_handler_->subscribe<SDL_MouseButtonEvent>(SDL_MOUSEBUTTONUP,[this](const SDL_MouseButtonEvent& e) { reset_selection(e); });
-    event_handler_->subscribe<SDL_WindowEvent>(SDL_WINDOWEVENT,[this](const SDL_WindowEvent& e) { window_event(e); });
+    event_handler_->subscribe<SDL_MouseWheelEvent>(SDL_MOUSEWHEEL,[this](const SDL_MouseWheelEvent& e) {
+        Sint32 scroll_dir = e.y;
+        window_->scroll(scroll_dir);
+    });
+    event_handler_->subscribe<SDL_Event>(SDL_QUIT, [this](const SDL_Event& e) {
+        on_quit_event(e);
+    });
+    event_handler_->subscribe<SDL_MouseMotionEvent>(SDL_MOUSEMOTION,[this](const SDL_MouseMotionEvent& e) {
+        on_selection(e);
+    });
+    event_handler_->subscribe<SDL_Event>(SDL_MOUSEBUTTONDOWN,[this](const SDL_Event& e) {
+        on_remove_selection(e);
+    });
+    event_handler_->subscribe<SDL_MouseButtonEvent>(SDL_MOUSEBUTTONUP,[this](const SDL_MouseButtonEvent& e) {
+        reset_selection(e);
+    });
+    event_handler_->subscribe<SDL_WindowEvent>(SDL_WINDOWEVENT,[this](const SDL_WindowEvent& e) {
+        window_event(e);
+    });
 }
 Application::~Application() {
     close(master_fd_);
@@ -155,7 +169,8 @@ void Application::loop() {
             window_->set_should_render(true);
         }
 
-        window_->draw(*buffer_.get());
+        // window_->draw(*buffer_.get());
+        window_->draw();
     }
 }
 
@@ -200,8 +215,8 @@ void Application::on_keys_pressed(const SDL_KeyboardEvent& event) {
 
 void Application::on_scroll_event(const SDL_MouseWheelEvent& event) {
     Sint32 scroll_dir = event.y;
-    window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
-    window_->set_should_render(true);
+    // window_->scroll(scroll_dir, buffer_->get_cursor_pos(), buffer_->get_max_y());
+    window_->scroll(scroll_dir);
 }
 
 void Application::on_quit_event([[maybe_unused]] const SDL_Event& event) {
@@ -219,14 +234,14 @@ void Application::on_selection(const SDL_MouseMotionEvent& event) {
 
         if (mouse_start_x <= 0 || mouse_start_y <= 0 || mouse_end_x <= 0 || mouse_end_y <= 0) return;
         on_remove_selection(SDL_Event{});
-        buffer_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y, window_->get_scroll_offset());
-        window_->set_should_render(true);
+        window_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y);
+        // buffer_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y, window_->get_scroll_offset());
+        // window_->set_should_render(true);
     }
 
 }
 void Application::on_remove_selection(const SDL_Event& event) {
-    buffer_->remove_selection();
-    window_->set_should_render(true);
+    window_->remove_selection();
 
     mouse_start_x = mouse_x;
     mouse_start_y = mouse_y;
@@ -311,29 +326,28 @@ void Application::cursor_to_end() {
 }
 
 void Application::on_erase_event() {
-    buffer_->erase_last_symbol();
-    // window_->set_shoulda_render(true);
+    window_->erase_at_end();
 }
 
 
 void Application::on_set_cursor(int row, int col) {
-    buffer_->set_cursor_position(row, col);
+    window_->set_cursor(row, col);
 }
 
 void Application::on_move_cursor(int row, int col) {
-    buffer_->move_cursor_pos_relative(row, col);
+    window_->move_cursor(row, col);
 }
 
 
 void Application::on_add_cells(std::vector<Cell>&& cells) {
-    buffer_->add_cells(std::move(cells));
+    window_->add_cells(std::move(cells));
 }
 
 void Application::paste_text(const char* text) {
     write(master_fd_, text, SDL_strlen(text));
 }
 void Application::on_reset_cursor(bool x_dir, bool y_dir) {
-    buffer_->reset_cursor(x_dir, y_dir);
+    window_->reset_cursor(x_dir, y_dir);
 }
 
 void Application::window_event(const SDL_WindowEvent& event) {
@@ -344,37 +358,25 @@ void Application::window_event(const SDL_WindowEvent& event) {
 
 
 void Application::on_clear_requested(bool remove) {
-    if (remove) {
-        buffer_->clear_all();
-        window_->set_scroll_offset(0);
-    } else {
-        auto [x, y] = buffer_->get_cursor_pos();
-        buffer_->set_cursor_position(buffer_->get_max_y() + 1, x);
-        window_->set_scroll_offset(buffer_->get_max_y());
-    }
-
-    window_->set_should_render(true);
+    window_->clear_buf(remove);
 }
 
 void Application::on_change_window_title(const std::string& win_title) {
     window_->set_window_title(win_title);
 }
 void Application::on_erase_in_line(int mode) {
-    buffer_->erase_in_line(mode);
+    window_->erase_in_line(mode);
 }
 
 void Application::on_insert_chars(int n) {
-    buffer_->insert_chars(n);
+    window_->insert_chars(n);
 }
 void Application::on_delete_chars(int n) {
-    buffer_->delete_chars(n);
+    window_->delete_chars(n);
 }
 
-
-
-
 void Application::copy_selected_text() {
-    auto text = buffer_->get_selected_text();
+    auto text = window_->get_selected_text();
     SDL_SetClipboardText(text.c_str());
 }
 
@@ -385,13 +387,6 @@ void Application::on_window_resized() {
 
     winsize wins;
     wins.ws_col = win_size.first / font_size.first;
-    // std::cout << wins.ws_col << std::endl;
     wins.ws_row = 20;
     ioctl(master_fd_, TIOCSWINSZ, &wins);
-
-    buffer_->resize(win_size, font_size);
-
-    // Update winsize somewhere
-
-    window_->set_should_render(true);
 }

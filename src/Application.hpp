@@ -30,7 +30,7 @@ private:
 
     // Members
     std::unique_ptr<Window> window_;
-    std::unique_ptr<TermBuffer> buffer_;
+    // std::unique_ptr<TermBuffer> buffer_;
     std::unique_ptr<EventHandler> event_handler_;
     std::unique_ptr<AnsiParser> parser_;
 
