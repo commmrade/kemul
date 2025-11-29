@@ -47,7 +47,7 @@ private:
     void grow_cols(int n);
     void shrink_cols(int n);
 
-    void iterate_mouse_selection();
+    void iterate_mouse_selection(bool should_clear);
 public:
     TermBuffer() = delete;
     explicit TermBuffer(int width, int height, int cell_width, int cell_height);
@@ -75,10 +75,10 @@ public:
 
     // Resize stuff
     void resize(std::pair<int, int> new_window_size, std::pair<int, int> font_size);
-    
+
     // Mouse selection methods
     void set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset); // Invert colors to signal 'selection'
-    void remove_selection(); // Unset mouse selection vaiables and undo 
+    void remove_selection(); // Unset mouse selection vaiables and undo
     std::string get_selected_text() const;
 
     // Some getters

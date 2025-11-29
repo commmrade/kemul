@@ -167,7 +167,7 @@ void TermBuffer::delete_chars(int n) {
     }
 }
 
-void TermBuffer::iterate_mouse_selection() {
+void TermBuffer::iterate_mouse_selection(bool should_clear) {
     if (mouse_start_cell.second == mouse_end_cell.second) {
         // Selection on the same line
         int x_start = 0;
@@ -182,7 +182,13 @@ void TermBuffer::iterate_mouse_selection() {
         x_end = std::min(x_end, width_cells_ - 1);
 
         for (auto j = x_start; j <= x_end; ++j) {
-            std::swap(buffer_[mouse_start_cell.second][j].fg_color, buffer_[mouse_start_cell.second][j].bg_color);
+            if (should_clear) {
+                buffer_[mouse_start_cell.second][j].fg_color = {200, 200, 200, 255}; // White
+                buffer_[mouse_start_cell.second][j].bg_color = {0, 0, 0, 255};       // Black
+            } else {
+                buffer_[mouse_start_cell.second][j].bg_color = {200, 200, 200, 255}; // White
+                buffer_[mouse_start_cell.second][j].fg_color = {0, 0, 0, 255};       // Black
+            }
         }
         return;
     }
@@ -207,14 +213,20 @@ void TermBuffer::iterate_mouse_selection() {
         x_end = std::min(x_end, width_cells_ - 1);
 
         for (auto j = x_start; j <= x_end; ++j) {
-            std::swap(buffer_[i][j].fg_color, buffer_[i][j].bg_color);
+            if (should_clear) {
+                buffer_[i][j].fg_color = {200, 200, 200, 255}; // White
+                buffer_[i][j].bg_color = {0, 0, 0, 255};       // Black
+            } else {
+                buffer_[i][j].bg_color = {200, 200, 200, 255}; // White
+                buffer_[i][j].fg_color = {0, 0, 0, 255};       // Black
+            }
         }
         ++i;
     } while (i <= mouse_end_cell.second);
 }
 
 void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, int scroll_offset) {
-    std::println("Set selection: {}x{} to {}x{}", start_x, start_y, end_x, end_y);
+
     if (start_y <= end_y) {
         mouse_start_cell.first = start_x / cell_size_.first;
         mouse_start_cell.second = start_y / cell_size_.second;
@@ -233,6 +245,7 @@ void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, i
         mouse_end_cell.first = -1; mouse_end_cell.second = -1;
         return;
     }
+    std::println("Set selection: {}x{} to {}x{}", mouse_start_cell.first, mouse_start_cell.second, mouse_end_cell.first, mouse_end_cell.second);
 
     // Counting offset
     mouse_start_cell.second += scroll_offset;
@@ -240,7 +253,7 @@ void TermBuffer::set_selection(int start_x, int start_y, int end_x, int end_y, i
     // No need to check start_cell.y because if (mouse_start_cell.second >= height_cells_) It cant be more than height_cells_ - 1
     mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_ - 1);
 
-    iterate_mouse_selection();
+    iterate_mouse_selection(false);
 }
 
 void TermBuffer::remove_selection() {
@@ -248,7 +261,7 @@ void TermBuffer::remove_selection() {
         return;
     }
     mouse_end_cell.second = std::min(mouse_end_cell.second, height_cells_ - 1);
-    iterate_mouse_selection();
+    iterate_mouse_selection(true);
 
     mouse_start_cell.first = -1;
     mouse_start_cell.second = -1;

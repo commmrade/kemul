@@ -233,14 +233,12 @@ void Application::on_selection(const SDL_MouseMotionEvent& event) {
         mouse_end_y = mouse_y;
 
         if (mouse_start_x <= 0 || mouse_start_y <= 0 || mouse_end_x <= 0 || mouse_end_y <= 0) return;
-        on_remove_selection(SDL_Event{});
         window_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y);
-        // buffer_->set_selection(mouse_start_x, mouse_start_y, mouse_end_x, mouse_end_y, window_->get_scroll_offset());
-        // window_->set_should_render(true);
     }
 
 }
 void Application::on_remove_selection(const SDL_Event& event) {
+    std::println("Cleared");
     window_->remove_selection();
 
     mouse_start_x = mouse_x;
