@@ -5,13 +5,9 @@
 #include <SDL_clipboard.h>
 #include <cstdlib>
 #include <cstring>
-#include <exception>
 #include <fcntl.h>
 #include <filesystem>
-#include <fstream>
-#include <iostream>
 #include <memory>
-#include <print>
 #include <pty.h>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>

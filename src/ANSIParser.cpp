@@ -5,7 +5,6 @@
 #include <string>
 #include <sstream>
 #include <cctype>
-#include <iostream>
 
 AnsiParser::AnsiParser(Application& app) : application(app) {
     // Initialize default cell attributes

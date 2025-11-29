@@ -46,6 +46,8 @@ target_include_directories(proj PRIVATE
     ${SDL2_TTF_INCLUDE_DIRS}
 )
 
+target_link_options(proj PRIVATE -Wall -Wextra)
+
 # Тесты
 add_executable(tests
     tests/test.cpp

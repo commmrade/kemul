@@ -11,7 +11,6 @@
 // #include <SDL_blendmode.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <array>
 #include <cstdlib>
 #include <filesystem>
 #include <string>
@@ -25,7 +24,6 @@
 #include <utf8cpp/utf8/checked.h>
 #include <utf8cpp/utf8/cpp11.h>
 #include "Application.hpp"
-#include <iostream>
 #include <unistd.h>
 
 int main(int argc, char** argv) {

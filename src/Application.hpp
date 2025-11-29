@@ -3,7 +3,6 @@
 #include <SDL_events.h>
 #include <SDL_keyboard.h>
 #include <SDL_stdinc.h>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <sys/poll.h>

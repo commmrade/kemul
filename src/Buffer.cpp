@@ -6,9 +6,6 @@
 #include <utility>
 #include <vector>
 #include <utf8cpp/utf8.h>
-#include <iostream>
-#include <ranges>
-
 
 
 TermBuffer::TermBuffer(int width, int height, int cell_width, int cell_height) : cell_size_({cell_width, cell_height}) {

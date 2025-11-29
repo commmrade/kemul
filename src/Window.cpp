@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <memory>
-#include <print>
 #include <pty.h>
 #include <stdexcept>
 #include <SDL2/SDL_error.h>
@@ -24,6 +23,7 @@
 #include <utf8cpp/utf8.h>
 #include <utf8cpp/utf8/cpp11.h>
 #include "Color.hpp"
+
 
 Window::Window(const std::string& font_path, int font_ptsize, int width, int height) : width_(width), height_(height), font_ptsize_(font_ptsize) {
     init();
@@ -133,82 +133,6 @@ void Window::draw() {
     SDL_RenderPresent(renderer_);
     should_render_ = false;
 }
-
-// void Window::draw(const TermBuffer& term_buffer) {
-//     if (!should_render_) {
-//         SDL_Delay(16);
-//         return;
-//     }
-
-//     auto font_size = get_font_size();
-//     cursor_pos_.x = 10;
-//     cursor_pos_.y = font_size.second / 2;
-
-//     SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
-//     SDL_RenderClear(renderer_);
-
-//     const auto& buffer = term_buffer.get_buffer();
-//     auto* atlas = glyph_cache_->atlas();
-//     auto render_limit = get_window_size().second / font_size.second - 1;
-//     auto [t_cursor_x, t_cursor_y] = term_buffer.get_cursor_pos();
-//     if (t_cursor_y > (int)scroll_offset_ + render_limit - 1 && !is_scrolling_) {
-//         scroll_offset_ += t_cursor_y - (scroll_offset_ + render_limit) + 1;
-//     }
-//     for (int i = scroll_offset_; i < std::min((int)scroll_offset_ + render_limit, (int)buffer.size()); ++i) {
-//         for (auto cell : buffer[i]) {
-//             if (cell.codepoint == 0) cell.codepoint = ' ';
-
-//             SDL_Rect src = glyph_cache_->get_or_create_glyph_pos(renderer_, font_, cell.codepoint);
-//             SDL_Rect glyph_rect{cursor_pos_.x, cursor_pos_.y, src.w, src.h};
-
-//             SDL_SetTextureColorMod(atlas, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b);
-
-//             if (cell.bg_color != SDL_Color{0, 0, 0, 255}) { // Default background
-//                 SDL_SetRenderDrawColor(renderer_, cell.bg_color.r, cell.bg_color.g, cell.bg_color.b, cell.bg_color.a);
-//                 SDL_Rect glyph_rect{ cursor_pos_.x, cursor_pos_.y, src.w, src.h};
-//                 SDL_RenderFillRect(renderer_, &glyph_rect);
-//                 SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 255);
-//             }
-//             if (cell.is_underline()) {
-//                 SDL_SetRenderDrawColor(renderer_, cell.fg_color.r, cell.fg_color.g, cell.fg_color.b, cell.fg_color.a);
-//                 SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h - src.h / 5, cursor_pos_.x + src.w, cursor_pos_.y + src.h - src.h / 5);
-//             }
-//             if (cell.is_bold()) {
-//                 SDL_SetTextureColorMod(atlas, 255, 255, 255);
-//             }
-//             if (cell.is_strikethrough()) {
-//                 SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
-//                 SDL_RenderDrawLine(renderer_, cursor_pos_.x, cursor_pos_.y + src.h / 2, cursor_pos_.x + src.w, cursor_pos_.y + src.h / 2);
-//             }
-
-//             SDL_RenderCopy(renderer_, atlas, &src, &glyph_rect);
-//             cursor_pos_.x += src.w;
-//         }
-//         cursor_pos_.x = 10;
-//         cursor_pos_.y += font_size.second;
-//     }
-
-//     SDL_Rect cursor_rect{t_cursor_x * font_size.first + font_size.first, (t_cursor_y - (int)scroll_offset_) * font_size.second + font_size.second / 2, font_size.first, font_size.second};
-//     SDL_SetRenderDrawColor(renderer_, 255, 255, 255, 255);
-//     SDL_RenderFillRect(renderer_, &cursor_rect);
-//     SDL_RenderPresent(renderer_);
-//     should_render_ = false;
-// }
-
-// void Window::scroll(Sint32 dir, std::pair<int, int> cursor_pos, int max_y) {
-//     if (dir < 0) {
-//         if (cursor_pos.second - scroll_offset_ + 1 < height_ / TTF_FontHeight(font_)) {
-//             is_scrolling_ = false;
-//             return;
-//         }
-//         scroll_offset_ += scroll_step_;
-//     } else if (dir > 0) {
-//         if ((int)scroll_offset_ >= scroll_step_) {
-//             scroll_offset_ -= scroll_step_;
-//             is_scrolling_ = true;
-//         }
-//     }
-// }
 
 void Window::scroll(Sint32 dir) {
     auto cursor_pos = buffer_->get_cursor_pos();
